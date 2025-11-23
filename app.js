@@ -99,10 +99,9 @@ async function initializeMillicast() {
     }
     
     // Millicast stream configuration
-    // Account ID: wmYD9m0X (from Dolby OptiView demo)
-    // Stream Name: multiview
-    const streamAccountId = 'wmYD9m0X';
-    const streamName = 'multiview';
+    // Using Free Nationals demo stream
+    const streamAccountId = 'gCbP3q';
+    const streamName = 'freenationalswebrtc';
     
     const tokenGenerator = () => window.millicast.Director.getSubscriber({
         streamAccountId: streamAccountId,
