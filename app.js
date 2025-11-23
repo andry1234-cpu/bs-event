@@ -32,7 +32,7 @@ let onlineUsers = 1;
 
 // DOM Elements (will be initialized after DOM is ready)
 let chatMessages, chatInput, sendBtn, reactionsOverlay, reactionButtons, usernameDisplay, onlineUsersDisplay, videoIframe;
-let player; // THEOplayer instance
+let millicastView; // Millicast viewer instance
 
 // Initialize
 function init() {
@@ -48,7 +48,7 @@ function init() {
     
     usernameDisplay.textContent = currentUser;
     setupEventListeners();
-    initializeTHEOplayer();
+    initializeMillicast();
     initializeFirebase();
 }
 
@@ -88,39 +88,55 @@ function setupEventListeners() {
     });
 }
 
-// Initialize THEOplayer with Millicast stream
-function initializeTHEOplayer() {
-    const element = document.getElementById('theoplayer-container');
+// Initialize Millicast WebRTC viewer
+async function initializeMillicast() {
+    const videoElement = document.getElementById('millicast-video');
     const placeholder = document.getElementById('placeholder');
     
-    if (typeof THEOplayer === 'undefined') {
-        console.error('THEOplayer not loaded');
+    if (typeof window.millicast === 'undefined') {
+        console.error('Millicast SDK not loaded');
         return;
     }
     
-    player = new THEOplayer.Player(element, {
-        libraryLocation: 'https://cdn.myth.theoplayer.com/27d8c167-9667-44e6-b12f-c42bb88699cc/',
-        license: ''
+    // Millicast stream configuration
+    // Account ID: wmYD9m0X (from Dolby OptiView demo)
+    // Stream Name: multiview
+    const streamAccountId = 'wmYD9m0X';
+    const streamName = 'multiview';
+    
+    const tokenGenerator = () => window.millicast.Director.getSubscriber({
+        streamAccountId: streamAccountId,
+        streamName: streamName
     });
     
-    // Configure Millicast source
-    player.source = {
-        sources: [{
-            type: 'application/x-mpegurl',
-            src: 'https://cdn.livepush.io/live/freenationalswebrtc/index.m3u8'
-        }]
-    };
-    
-    // Hide placeholder when playing
-    player.addEventListener('playing', () => {
+    try {
+        // Create viewer
+        millicastView = new window.millicast.View(streamName, tokenGenerator);
+        
+        // Set video element
+        millicastView.on('track', (event) => {
+            videoElement.srcObject = event.streams[0];
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+        });
+        
+        // Connect and play
+        await millicastView.connect();
+        
+        console.log('Millicast connected successfully');
+        
+    } catch (error) {
+        console.error('Millicast connection error:', error);
         if (placeholder) {
-            placeholder.style.display = 'none';
+            placeholder.innerHTML = '<p>❌</p><small>Errore connessione stream</small>';
         }
-    });
-    
-    // Auto play muted
-    player.muted = true;
-    player.autoplay = true;
+    }
+}
+
+// Legacy functions kept for compatibility
+function initializeTHEOplayer() {
+    console.log('THEOplayer initialization skipped - using Millicast');
 }
 
 // CASTR Player Integration (legacy - kept for compatibility)
