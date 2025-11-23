@@ -74,6 +74,8 @@ function init() {
 
 // Setup Authentication
 function setupAuth() {
+    const welcomeScreen = document.getElementById('welcome-screen');
+    
     onAuthStateChanged(auth, (user) => {
         if (user) {
             // User is signed in
@@ -84,7 +86,12 @@ function setupAuth() {
             // Update UI
             usernameDisplay.textContent = currentUser;
             
-            // Hide login, show edit button
+            // Hide welcome screen
+            if (welcomeScreen) {
+                welcomeScreen.classList.add('hidden');
+            }
+            
+            // Hide login, show logout button
             const loginBtn = document.getElementById('login-btn');
             const editBtn = document.getElementById('edit-username-btn');
             if (loginBtn) loginBtn.style.display = 'none';
@@ -93,10 +100,15 @@ function setupAuth() {
             // Initialize Firebase features
             initializeFirebase();
         } else {
-            // User is signed out - show login
+            // User is signed out - show welcome screen
             isAuthenticated = false;
             currentUser = null;
             currentUserId = null;
+            
+            // Show welcome screen
+            if (welcomeScreen) {
+                welcomeScreen.classList.remove('hidden');
+            }
             
             usernameDisplay.textContent = 'Non autenticato';
             
