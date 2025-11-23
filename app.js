@@ -1,6 +1,6 @@
 // Firebase Configuration
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, onDisconnect, set, serverTimestamp, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, onChildAdded, onDisconnect, set, serverTimestamp, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCmEbIjFLlLxVgLUqwsOLCsB0aoMWF6PJQ",
@@ -158,30 +158,32 @@ function listenToMessages() {
 }
 
 // Listen to incoming reactions
-let shownReactions = new Set();
+let reactionsInitialized = false;
 
 function listenToReactions() {
     const reactionsRef = ref(database, 'reactions');
     const reactionsQuery = query(reactionsRef, orderByChild('timestamp'), limitToLast(50));
     
-    onValue(reactionsQuery, (snapshot) => {
-        snapshot.forEach((childSnapshot) => {
-            const reactionId = childSnapshot.key;
-            const reaction = childSnapshot.val();
-            const reactionAge = Date.now() - reaction.timestamp;
-            
-            // Only show if not already shown and is recent
-            if (!shownReactions.has(reactionId) && reactionAge < CONFIG.reactionDuration) {
-                shownReactions.add(reactionId);
-                createFloatingReaction(reaction.emoji);
-                
-                // Remove from tracking after animation
-                setTimeout(() => {
-                    shownReactions.delete(reactionId);
-                }, CONFIG.reactionDuration + 1000);
-            }
-        });
+    // Use onChildAdded to only get new reactions
+    onChildAdded(reactionsQuery, (childSnapshot) => {
+        // Skip initial data load, only show new reactions
+        if (!reactionsInitialized) {
+            return;
+        }
+        
+        const reaction = childSnapshot.val();
+        const reactionAge = Date.now() - reaction.timestamp;
+        
+        // Only show if recent
+        if (reactionAge < CONFIG.reactionDuration) {
+            createFloatingReaction(reaction.emoji);
+        }
     });
+    
+    // Mark as initialized after first load
+    setTimeout(() => {
+        reactionsInitialized = true;
+    }, 1000);
 }
 
 // Chat Functions
