@@ -103,6 +103,46 @@ function setupEventListeners() {
             triggerReaction(reaction);
         });
     });
+    
+    // Username edit
+    const editUsernameBtn = document.getElementById('edit-username-btn');
+    if (editUsernameBtn) {
+        editUsernameBtn.addEventListener('click', openUsernameModal);
+    }
+}
+
+// Username Modal Functions
+window.openUsernameModal = function() {
+    const modal = document.getElementById('username-modal');
+    const input = document.getElementById('username-input');
+    if (modal && input) {
+        input.value = currentUser;
+        modal.classList.add('active');
+        input.focus();
+        input.select();
+    }
+}
+
+window.closeUsernameModal = function() {
+    const modal = document.getElementById('username-modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+window.saveUsername = function() {
+    const input = document.getElementById('username-input');
+    const newUsername = input.value.trim();
+    
+    if (newUsername && newUsername.length > 0) {
+        currentUser = newUsername;
+        const usernameDisplay = document.getElementById('username');
+        if (usernameDisplay) {
+            usernameDisplay.textContent = currentUser;
+        }
+        closeUsernameModal();
+        addSystemMessage(`Hai cambiato il tuo nome in "${currentUser}"`);
+    }
 }
 
 // Initialize Millicast WebRTC viewer

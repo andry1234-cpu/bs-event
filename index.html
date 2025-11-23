@@ -42,7 +42,8 @@
         <header class="header">
             <h1>Bending Spoons - Internal Event</h1>
             <div class="user-info">
-                <span id="username">Guest</span>
+                <span id="username" class="username-display">Guest</span>
+                <button id="edit-username-btn" class="edit-username-btn" title="Cambia nome">✏️</button>
             </div>
         </header>
 
@@ -126,6 +127,18 @@
                 </div>
             </section>
         </main>
+    </div>
+    
+    <!-- Username Change Modal -->
+    <div id="username-modal" class="username-modal">
+        <div class="username-modal-content">
+            <h2>Cambia Nome</h2>
+            <input type="text" id="username-input" placeholder="Inserisci il tuo nome" maxlength="20">
+            <div class="username-modal-buttons">
+                <button class="btn-cancel" onclick="closeUsernameModal()">Annulla</button>
+                <button class="btn-save" onclick="saveUsername()">Salva</button>
+            </div>
+        </div>
     </div>
 
     <!-- Millicast SDK -->
