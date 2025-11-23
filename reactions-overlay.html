@@ -124,6 +124,12 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .status.hidden {
+            opacity: 0;
+            visibility: hidden;
         }
 
         .status-dot {
@@ -189,8 +195,15 @@
             statusTextEl.textContent = text;
             if (isError) {
                 statusEl.classList.add('error');
+                statusEl.classList.remove('hidden');
             } else {
                 statusEl.classList.remove('error');
+                // Nascondi lo status dopo 2 secondi quando connesso
+                if (text.includes('Connesso')) {
+                    setTimeout(() => {
+                        statusEl.classList.add('hidden');
+                    }, 2000);
+                }
             }
         }
 
