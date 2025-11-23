@@ -169,17 +169,9 @@ function startMetricsMonitoring() {
             });
             
             if (videoStats) {
-                // Buffer Size - calculated from jitterBufferDelay
-                if (videoStats.jitterBufferDelay && videoStats.jitterBufferEmittedCount) {
-                    const bufferSize = (videoStats.jitterBufferDelay / videoStats.jitterBufferEmittedCount) * 1000;
-                    document.getElementById('buffer-size').textContent = `${bufferSize.toFixed(0)}ms`;
-                } else {
-                    document.getElementById('buffer-size').textContent = '0ms';
-                }
-                
                 // Local Time - current browser time in ISO format
-                const localTime = new Date().toISOString();
-                document.getElementById('local-time').textContent = localTime;
+                const localTime = new Date();
+                document.getElementById('local-time').textContent = localTime.toISOString();
                 
                 // Stream Time - use timestamp from NTP or estimate from stats
                 // OptiView gets this from embedded metadata in the stream
@@ -190,6 +182,10 @@ function startMetricsMonitoring() {
                 
                 const streamDate = new Date(Date.now() - estimatedLatency);
                 document.getElementById('stream-time').textContent = streamDate.toISOString();
+                
+                // Latency - calculate difference between local time and stream time
+                const latencyMs = localTime - streamDate;
+                document.getElementById('latency').textContent = `${latencyMs.toFixed(0)}ms`;
             }
         } catch (error) {
             console.error('Error getting stream stats:', error);
