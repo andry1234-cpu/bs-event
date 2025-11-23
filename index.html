@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- THEOplayer CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.myth.theoplayer.com/27d8c167-9667-44e6-b12f-c42bb88699cc/THEOplayer.css" />
 </head>
 <body>
     <div class="container">
@@ -26,18 +28,12 @@
                 <div class="player-container">
                     <!-- Video Player -->
                     <div id="castr-player">
-                        <video 
-                            id="video-player"
-                            controls
-                            autoplay
-                            muted
-                            playsinline>
-                            <source src="https://cdn.livepush.io/live/freenationalswebrtc/index.m3u8" type="application/x-mpegURL">
-                            Your browser does not support the video tag.
-                        </video>
+                        <!-- THEOplayer container -->
+                        <div id="theoplayer-container" class="video-js theoplayer-skin theo-seekbar-above-controls"></div>
+                        
                         <div class="placeholder" id="placeholder">
                             <p>🎥 Player Video</p>
-                            <small>Stream di test - Free Nationals</small>
+                            <small>Caricamento stream...</small>
                         </div>
                     </div>
                     
@@ -85,6 +81,8 @@
         </main>
     </div>
 
+    <!-- THEOplayer JS -->
+    <script type="text/javascript" src="https://cdn.myth.theoplayer.com/27d8c167-9667-44e6-b12f-c42bb88699cc/THEOplayer.js"></script>
     <!-- Firebase SDK -->
     <script type="module" src="app.js"></script>
 </body>

@@ -32,6 +32,7 @@ let onlineUsers = 1;
 
 // DOM Elements (will be initialized after DOM is ready)
 let chatMessages, chatInput, sendBtn, reactionsOverlay, reactionButtons, usernameDisplay, onlineUsersDisplay, videoIframe;
+let player; // THEOplayer instance
 
 // Initialize
 function init() {
@@ -47,19 +48,8 @@ function init() {
     
     usernameDisplay.textContent = currentUser;
     setupEventListeners();
-    loadCastrPlayer();
+    initializeTHEOplayer();
     initializeFirebase();
-    
-    // Hide placeholder when video loads
-    const videoPlayer = document.getElementById('video-player');
-    const placeholder = document.getElementById('placeholder');
-    if (videoPlayer) {
-        videoPlayer.addEventListener('loadeddata', () => {
-            if (placeholder) {
-                placeholder.style.display = 'none';
-            }
-        });
-    }
 }
 
 // Initialize Firebase Realtime Features
@@ -98,12 +88,50 @@ function setupEventListeners() {
     });
 }
 
-// CASTR Player Integration
+// Initialize THEOplayer with Millicast stream
+function initializeTHEOplayer() {
+    const element = document.getElementById('theoplayer-container');
+    const placeholder = document.getElementById('placeholder');
+    
+    if (typeof THEOplayer === 'undefined') {
+        console.error('THEOplayer not loaded');
+        return;
+    }
+    
+    player = new THEOplayer.Player(element, {
+        libraryLocation: 'https://cdn.myth.theoplayer.com/27d8c167-9667-44e6-b12f-c42bb88699cc/',
+        license: ''
+    });
+    
+    // Configure Millicast source
+    player.source = {
+        sources: [{
+            type: 'application/x-mpegurl',
+            src: 'https://cdn.livepush.io/live/freenationalswebrtc/index.m3u8'
+        }]
+    };
+    
+    // Hide placeholder when playing
+    player.addEventListener('playing', () => {
+        if (placeholder) {
+            placeholder.style.display = 'none';
+        }
+    });
+    
+    // Auto play muted
+    player.muted = true;
+    player.autoplay = true;
+}
+
+// CASTR Player Integration (legacy - kept for compatibility)
 function loadCastrPlayer() {
-    if (CONFIG.castrPlayerUrl) {
+    if (CONFIG.castrPlayerUrl && videoIframe) {
         videoIframe.src = CONFIG.castrPlayerUrl;
         videoIframe.classList.add('active');
-        document.querySelector('.placeholder').style.display = 'none';
+        const placeholder = document.querySelector('.placeholder');
+        if (placeholder) {
+            placeholder.style.display = 'none';
+        }
     }
 }
 
