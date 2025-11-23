@@ -1,0 +1,330 @@
+// Firebase Configuration
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, push, onValue, onDisconnect, set, serverTimestamp, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCmEbIjFLlLxVgLUqwsOLCsB0aoMWF6PJQ",
+  authDomain: "bendingspoons-eventdec25.firebaseapp.com",
+  databaseURL: "https://bendingspoons-eventdec25-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "bendingspoons-eventdec25",
+  storageBucket: "bendingspoons-eventdec25.firebasestorage.app",
+  messagingSenderId: "26050473198",
+  appId: "1:26050473198:web:52d2e5d2bb912eaa2ad7ff",
+  measurementId: "G-6C7XXL2XSN"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
+// Configurazione
+const CONFIG = {
+    castrPlayerUrl: '', // Inserire l'URL del player CASTR
+    maxMessages: 100,
+    reactionDuration: 3000
+};
+
+// State Management
+let currentUser = 'Guest_' + Math.floor(Math.random() * 1000);
+let currentUserId = null;
+let messages = [];
+let onlineUsers = 1;
+
+// DOM Elements (will be initialized after DOM is ready)
+let chatMessages, chatInput, sendBtn, reactionsOverlay, reactionButtons, usernameDisplay, onlineUsersDisplay, videoIframe;
+
+// Initialize
+function init() {
+    // Initialize DOM elements
+    chatMessages = document.getElementById('chat-messages');
+    chatInput = document.getElementById('chat-input');
+    sendBtn = document.getElementById('send-btn');
+    reactionsOverlay = document.getElementById('reactions-overlay');
+    reactionButtons = document.querySelectorAll('.reaction-btn');
+    usernameDisplay = document.getElementById('username');
+    onlineUsersDisplay = document.getElementById('online-users');
+    videoIframe = document.getElementById('video-iframe');
+    
+    usernameDisplay.textContent = currentUser;
+    setupEventListeners();
+    loadCastrPlayer();
+    initializeFirebase();
+}
+
+// Initialize Firebase Realtime Features
+function initializeFirebase() {
+    // Generate unique user ID
+    currentUserId = 'user_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    
+    // Setup presence system
+    setupPresence();
+    
+    // Listen to messages
+    listenToMessages();
+    
+    // Listen to reactions
+    listenToReactions();
+    
+    addSystemMessage('Connesso! La chat è sincronizzata.');
+}
+
+// Setup Event Listeners
+function setupEventListeners() {
+    // Chat
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // Reactions
+    reactionButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const reaction = btn.dataset.reaction;
+            triggerReaction(reaction);
+        });
+    });
+}
+
+// CASTR Player Integration
+function loadCastrPlayer() {
+    if (CONFIG.castrPlayerUrl) {
+        videoIframe.src = CONFIG.castrPlayerUrl;
+        videoIframe.classList.add('active');
+        document.querySelector('.placeholder').style.display = 'none';
+    }
+}
+
+// Funzione per configurare l'URL del player CASTR
+function setCastrUrl(url) {
+    CONFIG.castrPlayerUrl = url;
+    loadCastrPlayer();
+}
+
+// ===== FIREBASE REALTIME FUNCTIONS =====
+
+// Setup user presence (online/offline status)
+function setupPresence() {
+    const userStatusRef = ref(database, 'presence/' + currentUserId);
+    const connectedRef = ref(database, '.info/connected');
+    
+    onValue(connectedRef, (snapshot) => {
+        if (snapshot.val() === true) {
+            // User is online
+            set(userStatusRef, {
+                username: currentUser,
+                online: true,
+                lastSeen: serverTimestamp()
+            });
+            
+            // When user disconnects, mark as offline
+            onDisconnect(userStatusRef).set({
+                username: currentUser,
+                online: false,
+                lastSeen: serverTimestamp()
+            });
+        }
+    });
+    
+    // Listen to all users presence
+    const presenceRef = ref(database, 'presence');
+    onValue(presenceRef, (snapshot) => {
+        let count = 0;
+        snapshot.forEach((child) => {
+            if (child.val().online) {
+                count++;
+            }
+        });
+        updateOnlineUsers(count);
+    });
+}
+
+// Listen to incoming messages
+function listenToMessages() {
+    const messagesRef = ref(database, 'messages');
+    const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(CONFIG.maxMessages));
+    
+    onValue(messagesQuery, (snapshot) => {
+        // Clear current messages
+        chatMessages.innerHTML = '<div class="system-message">Benvenuto! La chat è pronta per l\'evento.</div>';
+        messages = [];
+        
+        snapshot.forEach((childSnapshot) => {
+            const message = childSnapshot.val();
+            // Don't re-add if it's from this user's send action (to avoid duplicates)
+            if (message && !message.isLocal) {
+                addMessageToUI(message);
+            }
+        });
+    });
+}
+
+// Listen to incoming reactions
+function listenToReactions() {
+    const reactionsRef = ref(database, 'reactions');
+    
+    onValue(reactionsRef, (snapshot) => {
+        snapshot.forEach((childSnapshot) => {
+            const reaction = childSnapshot.val();
+            const reactionAge = Date.now() - reaction.timestamp;
+            
+            // Only show reactions from the last few seconds and not from this user
+            if (reactionAge < CONFIG.reactionDuration && reaction.userId !== currentUserId) {
+                createFloatingReaction(reaction.emoji);
+            }
+        });
+    });
+}
+
+// Chat Functions
+function sendMessage() {
+    const messageText = chatInput.value.trim();
+    
+    if (!messageText) return;
+    
+    const message = {
+        author: currentUser,
+        content: messageText,
+        timestamp: Date.now(),
+        userId: currentUserId
+    };
+    
+    // Add to Firebase
+    const messagesRef = ref(database, 'messages');
+    push(messagesRef, message);
+    
+    // Add to UI immediately
+    addMessageToUI({...message, isLocal: true});
+    
+    chatInput.value = '';
+}
+
+function addMessageToUI(message) {
+    messages.push(message);
+    
+    const messageEl = createMessageElement(message);
+    chatMessages.appendChild(messageEl);
+    
+    // Auto scroll
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Legacy function for compatibility
+function addMessage(message) {
+    addMessageToUI(message);
+}
+
+function createMessageElement(message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message';
+    
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'message-header';
+    
+    const authorSpan = document.createElement('span');
+    authorSpan.className = 'message-author';
+    authorSpan.textContent = message.author;
+    
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'message-time';
+    timeSpan.textContent = formatTime(message.timestamp);
+    
+    headerDiv.appendChild(authorSpan);
+    headerDiv.appendChild(timeSpan);
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    contentDiv.textContent = message.content;
+    
+    messageDiv.appendChild(headerDiv);
+    messageDiv.appendChild(contentDiv);
+    
+    return messageDiv;
+}
+
+function addSystemMessage(text) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'system-message';
+    messageDiv.textContent = text;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+// Reactions System
+function triggerReaction(emoji) {
+    // Add to Firebase
+    const reactionsRef = ref(database, 'reactions');
+    push(reactionsRef, {
+        emoji: emoji,
+        userId: currentUserId,
+        timestamp: Date.now()
+    });
+    
+    // Show locally immediately
+    createFloatingReaction(emoji);
+}
+
+function createFloatingReaction(emoji) {
+    const reaction = document.createElement('div');
+    reaction.className = 'floating-reaction';
+    reaction.textContent = emoji;
+    
+    // Random horizontal position
+    const randomX = Math.random() * 80 + 10; // 10% to 90%
+    reaction.style.left = randomX + '%';
+    reaction.style.bottom = '0';
+    
+    reactionsOverlay.appendChild(reaction);
+    
+    // Remove after animation
+    setTimeout(() => {
+        reaction.remove();
+    }, CONFIG.reactionDuration);
+}
+
+// Update online users count
+function updateOnlineUsers(count) {
+    onlineUsers = count;
+    onlineUsersDisplay.textContent = count;
+}
+
+// Utility: Set username
+function setUsername(name) {
+    currentUser = name;
+    usernameDisplay.textContent = name;
+    
+    // Update presence with new username
+    if (currentUserId) {
+        const userStatusRef = ref(database, 'presence/' + currentUserId);
+        set(userStatusRef, {
+            username: name,
+            online: true,
+            lastSeen: serverTimestamp()
+        });
+    }
+    
+    addSystemMessage(`Ora ti chiami ${name}`);
+}
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+});
+
+// Expose functions for external use
+window.EventPage = {
+    setCastrUrl,
+    setUsername,
+    updateOnlineUsers,
+    triggerReaction,
+    addMessageToUI,
+    addSystemMessage
+};

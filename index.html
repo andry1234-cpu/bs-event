@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bending Spoons - Internal Event</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Bending Spoons - Internal Event</h1>
+            <div class="user-info">
+                <span id="username">Guest</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Video Player Section -->
+            <section class="player-section">
+                <div class="player-container">
+                    <!-- CASTR Player embed - da configurare -->
+                    <div id="castr-player">
+                        <iframe 
+                            id="video-iframe"
+                            src="" 
+                            frameborder="0" 
+                            scrolling="no" 
+                            allow="autoplay; encrypted-media" 
+                            allowfullscreen>
+                        </iframe>
+                        <div class="placeholder">
+                            <p>🎥 Player CASTR</p>
+                            <small>Inserire URL dello stream CASTR</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Reactions Overlay -->
+                    <div class="reactions-overlay" id="reactions-overlay"></div>
+                </div>
+
+                <!-- Reactions Buttons -->
+                <div class="reactions-bar">
+                    <button class="reaction-btn" data-reaction="👍" title="Like">👍</button>
+                    <button class="reaction-btn" data-reaction="❤️" title="Love">❤️</button>
+                    <button class="reaction-btn" data-reaction="😂" title="Haha">😂</button>
+                    <button class="reaction-btn" data-reaction="🎉" title="Celebrate">🎉</button>
+                    <button class="reaction-btn" data-reaction="👏" title="Clap">👏</button>
+                </div>
+            </section>
+
+            <!-- Chat Section -->
+            <section class="chat-section">
+                <div class="chat-header">
+                    <h2>💬 Chat Live</h2>
+                    <span class="online-count">
+                        <span class="status-dot"></span>
+                        <span id="online-users">1</span> online
+                    </span>
+                </div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages will appear here -->
+                    <div class="system-message">
+                        Benvenuto! La chat è pronta per l'evento.
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        placeholder="Scrivi un messaggio..."
+                        maxlength="500"
+                    />
+                    <button id="send-btn" class="send-btn">Invia</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
