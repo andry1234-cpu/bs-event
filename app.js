@@ -49,6 +49,17 @@ function init() {
     setupEventListeners();
     loadCastrPlayer();
     initializeFirebase();
+    
+    // Hide placeholder when video loads
+    const videoPlayer = document.getElementById('video-player');
+    const placeholder = document.getElementById('placeholder');
+    if (videoPlayer) {
+        videoPlayer.addEventListener('loadeddata', () => {
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+        });
+    }
 }
 
 // Initialize Firebase Realtime Features

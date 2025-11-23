@@ -24,19 +24,20 @@
             <!-- Video Player Section -->
             <section class="player-section">
                 <div class="player-container">
-                    <!-- CASTR Player embed - da configurare -->
+                    <!-- Video Player -->
                     <div id="castr-player">
-                        <iframe 
-                            id="video-iframe"
-                            src="" 
-                            frameborder="0" 
-                            scrolling="no" 
-                            allow="autoplay; encrypted-media" 
-                            allowfullscreen>
-                        </iframe>
-                        <div class="placeholder">
-                            <p>🎥 Player CASTR</p>
-                            <small>Inserire URL dello stream CASTR</small>
+                        <video 
+                            id="video-player"
+                            controls
+                            autoplay
+                            muted
+                            playsinline>
+                            <source src="https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" type="application/x-mpegURL">
+                            Your browser does not support the video tag.
+                        </video>
+                        <div class="placeholder" id="placeholder">
+                            <p>🎥 Player Video</p>
+                            <small>Stream di test - Tears of Steel</small>
                         </div>
                     </div>
                     
