@@ -109,7 +109,6 @@ body {
     min-height: 0;
     transition: box-shadow 0.3s ease;
     max-width: 1400px;
-    width: 100%;
     margin: 0 auto;
     contain: layout;
 }
