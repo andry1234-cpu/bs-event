@@ -105,10 +105,13 @@
             <section class="chat-section">
                 <div class="chat-header">
                     <h2>💬 Chat Live</h2>
-                    <span class="online-count">
-                        <span class="status-dot"></span>
-                        <span id="online-users">1</span> online
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span class="online-count">
+                            <span class="status-dot"></span>
+                            <span id="online-users">1</span> online
+                        </span>
+                        <button class="chat-close-btn" id="chat-close-btn" title="Chiudi chat">✕</button>
+                    </div>
                 </div>
                 
                 <div class="chat-messages" id="chat-messages">
@@ -129,6 +132,12 @@
                 </div>
             </section>
         </main>
+        
+        <!-- Floating Chat Button (Mobile Only) -->
+        <button class="chat-toggle-btn" id="chat-toggle-btn">
+            💬
+            <span class="chat-badge" id="chat-badge">0</span>
+        </button>
     </div>
     
     <!-- Username Change Modal -->

@@ -559,6 +559,10 @@ html {
     letter-spacing: -0.01em;
 }
 
+.chat-close-btn {
+    display: none;
+}
+
 .online-count {
     display: flex;
     align-items: center;
@@ -715,6 +719,62 @@ html {
     transform: scale(0.98);
 }
 
+/* Floating Chat Button (Mobile) */
+.chat-toggle-btn {
+    display: none;
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.chat-toggle-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 30px rgba(139, 92, 246, 0.7);
+}
+
+.chat-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+.chat-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #EF4444;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 2px solid #000;
+    display: none;
+}
+
+.chat-badge.show {
+    display: flex;
+    animation: badge-bounce 0.5s ease;
+}
+
+@keyframes badge-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
     .main-content {
@@ -746,5 +806,50 @@ html {
     .reactions-bar {
         gap: 0.5rem;
         padding: 0.8rem;
+    }
+    
+    /* Mobile Chat Overlay */
+    .chat-toggle-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .chat-section {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        max-height: 100vh;
+        border-radius: 0;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .chat-section.mobile-open {
+        transform: translateY(0);
+    }
+    
+    .chat-header {
+        padding: 1rem;
+    }
+    
+    .chat-close-btn {
+        display: block;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .chat-close-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
     }
 }
