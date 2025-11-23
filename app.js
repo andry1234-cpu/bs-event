@@ -51,18 +51,21 @@ function init() {
     initializeMillicast();
     initializeFirebase();
     
-    // Hide loader after layout is stable
-    // Use requestAnimationFrame to wait for layout calculations
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
+    // Hide loader and show content after layout is fully stable
+    setTimeout(() => {
+        const loader = document.getElementById('page-loader');
+        const container = document.querySelector('.container');
+        
+        if (container) {
+            container.classList.add('loaded');
+        }
+        
+        if (loader) {
             setTimeout(() => {
-                const loader = document.getElementById('page-loader');
-                if (loader) {
-                    loader.classList.add('hidden');
-                }
+                loader.classList.add('hidden');
             }, 300);
-        });
-    });
+        }
+    }, 1000);
 }
 
 // Initialize Firebase Realtime Features

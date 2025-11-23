@@ -65,6 +65,16 @@
     font-weight: 500;
 }
 
+/* Hide content until loaded */
+.container {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.container.loaded {
+    opacity: 1;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: linear-gradient(180deg, #000000 0%, #0A0A0A 50%, #000000 100%);
