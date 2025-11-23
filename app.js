@@ -157,36 +157,30 @@ function startMetricsMonitoring() {
             });
             
             if (videoStats) {
-                // Resolution
-                const resolution = `${videoStats.frameWidth || 0}x${videoStats.frameHeight || 0}`;
-                document.getElementById('video-resolution').textContent = resolution;
-                
-                // Bitrate (calculate based on bytes received over time)
-                if (lastBytesReceived > 0 && lastTimestamp > 0) {
-                    const bytesDiff = videoStats.bytesReceived - lastBytesReceived;
-                    const timeDiff = (videoStats.timestamp - lastTimestamp) / 1000; // Convert to seconds
-                    const bitrate = (bytesDiff * 8) / timeDiff / 1000000; // Convert to Mbps
-                    document.getElementById('video-bitrate').textContent = `${bitrate.toFixed(2)} Mbps`;
-                }
-                lastBytesReceived = videoStats.bytesReceived;
-                lastTimestamp = videoStats.timestamp;
-                
-                // FPS
-                const fps = videoStats.framesPerSecond || 0;
-                document.getElementById('video-fps').textContent = fps > 0 ? `${Math.round(fps)}` : '-';
-                
-                // Latency - calculated from jitterBufferDelay
+                // Buffer Size - calculated from jitterBufferDelay
                 if (videoStats.jitterBufferDelay && videoStats.jitterBufferEmittedCount) {
-                    const latency = (videoStats.jitterBufferDelay / videoStats.jitterBufferEmittedCount) * 1000;
-                    document.getElementById('video-latency').textContent = `${latency.toFixed(0)} ms`;
+                    const bufferSize = (videoStats.jitterBufferDelay / videoStats.jitterBufferEmittedCount) * 1000;
+                    document.getElementById('buffer-size').textContent = `${bufferSize.toFixed(0)}ms`;
                 } else {
-                    document.getElementById('video-latency').textContent = '-';
+                    document.getElementById('buffer-size').textContent = '0ms';
+                }
+                
+                // Local Time - current browser time in ISO format
+                const localTime = new Date().toISOString();
+                document.getElementById('local-time').textContent = localTime;
+                
+                // Stream Time - timestamp from the RTP packets
+                if (videoStats.timestamp) {
+                    const streamDate = new Date(videoStats.timestamp);
+                    document.getElementById('stream-time').textContent = streamDate.toISOString();
+                } else {
+                    document.getElementById('stream-time').textContent = '-';
                 }
             }
         } catch (error) {
             console.error('Error getting stream stats:', error);
         }
-    }, 1000); // Update every second
+    }, 100); // Update every 100ms for more responsive display
 }
 
 // Legacy functions kept for compatibility
