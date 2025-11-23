@@ -176,7 +176,24 @@ function setupEventListeners() {
         });
     });
     
-    // Username edit
+    // User dropdown menu
+    const userDropdown = document.getElementById('user-dropdown');
+    
+    if (usernameDisplay) {
+        usernameDisplay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (userDropdown && !e.target.closest('.user-menu')) {
+            userDropdown.classList.remove('show');
+        }
+    });
+    
+    // Username edit (legacy - kept for compatibility)
     const editUsernameBtn = document.getElementById('edit-username-btn');
     if (editUsernameBtn) {
         editUsernameBtn.addEventListener('click', openUsernameModal);
