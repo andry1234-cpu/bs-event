@@ -416,3 +416,14 @@ body {
         padding: 0.8rem;
     }
 }
+
+/* Footer */
+.footer {
+    background: var(--surface);
+    padding: 1rem 2rem;
+    text-align: center;
+    border-top: 2px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
