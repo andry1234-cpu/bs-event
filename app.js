@@ -85,17 +85,16 @@ function setupAuth() {
             
             // Update UI
             usernameDisplay.textContent = currentUser;
+            usernameDisplay.style.display = 'inline-block';
             
             // Hide welcome screen
             if (welcomeScreen) {
                 welcomeScreen.classList.add('hidden');
             }
             
-            // Hide login, show logout button
+            // Hide login button
             const loginBtn = document.getElementById('login-btn');
-            const editBtn = document.getElementById('edit-username-btn');
             if (loginBtn) loginBtn.style.display = 'none';
-            if (editBtn) editBtn.style.display = 'inline-block';
             
             // Initialize Firebase features
             initializeFirebase();
@@ -111,11 +110,10 @@ function setupAuth() {
             }
             
             usernameDisplay.textContent = 'Non autenticato';
+            usernameDisplay.style.display = 'none';
             
             const loginBtn = document.getElementById('login-btn');
-            const editBtn = document.getElementById('edit-username-btn');
-            if (loginBtn) loginBtn.style.display = 'inline-block';
-            if (editBtn) editBtn.style.display = 'none';
+            if (loginBtn) loginBtn.style.display = 'flex';
         }
     });
 }
