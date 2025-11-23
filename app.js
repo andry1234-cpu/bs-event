@@ -32,9 +32,6 @@ let onlineUsers = 1;
 
 // DOM Elements (will be initialized after DOM is ready)
 let chatMessages, chatInput, sendBtn, reactionsOverlay, reactionButtons, usernameDisplay, onlineUsersDisplay, videoIframe;
-let chatToggleBtn, chatCloseBtn, chatSection, chatBadge;
-let unreadMessages = 0;
-let isChatOpen = false;
 let millicastView; // Millicast viewer instance
 
 // Initialize
@@ -48,20 +45,8 @@ function init() {
     usernameDisplay = document.getElementById('username');
     onlineUsersDisplay = document.getElementById('online-users');
     videoIframe = document.getElementById('video-iframe');
-    chatToggleBtn = document.getElementById('chat-toggle-btn');
-    chatCloseBtn = document.getElementById('chat-close-btn');
-    chatSection = document.querySelector('.chat-section');
-    chatBadge = document.getElementById('chat-badge');
     
     usernameDisplay.textContent = currentUser;
-    
-    // Check if mobile
-    if (window.innerWidth <= 768) {
-        isChatOpen = false;
-    } else {
-        isChatOpen = true;
-    }
-    
     setupEventListeners();
     initializeMillicast();
     initializeFirebase();
@@ -110,15 +95,6 @@ function setupEventListeners() {
             sendMessage();
         }
     });
-    
-    // Mobile chat toggle
-    if (chatToggleBtn) {
-        chatToggleBtn.addEventListener('click', openChat);
-    }
-    
-    if (chatCloseBtn) {
-        chatCloseBtn.addEventListener('click', closeChat);
-    }
 
     // Reactions
     reactionButtons.forEach(btn => {
@@ -363,8 +339,6 @@ function listenToMessages() {
     const messagesRef = ref(database, 'messages');
     const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(CONFIG.maxMessages));
     
-    let isFirstLoad = true;
-    
     onValue(messagesQuery, (snapshot) => {
         // Clear current messages
         chatMessages.innerHTML = '<div class="system-message">Benvenuto! La chat è pronta per l\'evento.</div>';
@@ -372,10 +346,8 @@ function listenToMessages() {
         
         snapshot.forEach((childSnapshot) => {
             const message = childSnapshot.val();
-            addMessageToUI(message, isFirstLoad);
+            addMessageToUI(message);
         });
-        
-        isFirstLoad = false;
     });
 }
 
@@ -428,7 +400,7 @@ function sendMessage() {
     chatInput.value = '';
 }
 
-function addMessageToUI(message, isInitialLoad = false) {
+function addMessageToUI(message) {
     messages.push(message);
     
     const messageEl = createMessageElement(message);
@@ -436,11 +408,6 @@ function addMessageToUI(message, isInitialLoad = false) {
     
     // Auto scroll
     chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    // Update unread badge only for new messages (not initial load)
-    if (!isInitialLoad) {
-        updateUnreadBadge();
-    }
 }
 
 // Legacy function for compatibility
@@ -542,43 +509,6 @@ function setUsername(name) {
     }
     
     addSystemMessage(`Ora ti chiami ${name}`);
-}
-
-// Mobile Chat Functions
-function openChat() {
-    if (chatSection) {
-        chatSection.classList.add('mobile-open');
-        isChatOpen = true;
-        unreadMessages = 0;
-        if (chatBadge) {
-            chatBadge.classList.remove('show');
-            chatBadge.textContent = '0';
-        }
-        // Auto-scroll to latest messages
-        setTimeout(() => {
-            if (chatMessages) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        }, 100);
-    }
-}
-
-function closeChat() {
-    if (chatSection) {
-        chatSection.classList.remove('mobile-open');
-        isChatOpen = false;
-    }
-}
-
-function updateUnreadBadge() {
-    // Only show badge on mobile when chat is closed
-    if (window.innerWidth <= 768 && !isChatOpen) {
-        unreadMessages++;
-        if (chatBadge) {
-            chatBadge.textContent = unreadMessages > 99 ? '99+' : unreadMessages;
-            chatBadge.classList.add('show');
-        }
-    }
 }
 
 // Initialize app
