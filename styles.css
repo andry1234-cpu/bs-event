@@ -11,6 +11,8 @@
     --border: #1F1F1F;
     --gradient-start: #8B5CF6;
     --gradient-end: #3B82F6;
+    --chat-surface: #0F0A14;
+    --chat-message-bg: #15101D;
 }
 
 * {
@@ -218,17 +220,18 @@ body {
 .chat-section {
     display: flex;
     flex-direction: column;
-    background: var(--surface);
+    background: var(--chat-surface);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.1);
     min-height: 0;
 }
 
 .chat-header {
     padding: 1rem 1.5rem;
-    background: var(--surface-light);
-    border-bottom: 2px solid var(--border);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.15);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -330,11 +333,12 @@ body {
 }
 
 .message-content {
-    background: var(--surface-light);
+    background: var(--chat-message-bg);
     padding: 0.8rem 1rem;
     border-radius: 8px;
     word-wrap: break-word;
     font-size: 0.95rem;
+    border: 1px solid rgba(139, 92, 246, 0.08);
 }
 
 .system-message {
@@ -347,8 +351,8 @@ body {
 
 .chat-input-container {
     padding: 1rem 1.5rem;
-    background: var(--surface-light);
-    border-top: 2px solid var(--border);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(59, 130, 246, 0.03) 100%);
+    border-top: 1px solid rgba(139, 92, 246, 0.15);
     display: flex;
     gap: 1rem;
     flex-shrink: 0;
@@ -356,18 +360,19 @@ body {
 
 #chat-input {
     flex: 1;
-    background: var(--surface);
-    border: 2px solid var(--border);
+    background: rgba(10, 10, 10, 0.6);
+    border: 1px solid rgba(139, 92, 246, 0.2);
     border-radius: 8px;
     padding: 0.8rem 1rem;
     color: var(--text-primary);
     font-size: 0.95rem;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background 0.2s;
 }
 
 #chat-input:focus {
     outline: none;
     border-color: var(--primary-color);
+    background: rgba(10, 10, 10, 0.8);
 }
 
 .send-btn {
