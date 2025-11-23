@@ -13,12 +13,14 @@
     --gradient-end: #3B82F6;
     --chat-surface: #0F0A14;
     --chat-message-bg: #15101D;
+    color-scheme: only light;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Page Loader */
