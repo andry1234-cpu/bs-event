@@ -125,12 +125,57 @@ async function initializeMillicast() {
         
         console.log('Millicast connected successfully');
         
+        // Start monitoring stream metrics
+        startMetricsMonitoring();
+        
     } catch (error) {
         console.error('Millicast connection error:', error);
         if (placeholder) {
             placeholder.innerHTML = '<p>❌</p><small>Errore connessione stream</small>';
         }
     }
+}
+
+// Monitor stream metrics
+function startMetricsMonitoring() {
+    const videoElement = document.getElementById('millicast-video');
+    
+    setInterval(async () => {
+        if (!millicastView || !millicastView.webRTCPeer) return;
+        
+        try {
+            const stats = await millicastView.webRTCPeer.getRTCPeer().getStats();
+            let videoStats = null;
+            
+            stats.forEach(report => {
+                if (report.type === 'inbound-rtp' && report.kind === 'video') {
+                    videoStats = report;
+                }
+            });
+            
+            if (videoStats) {
+                // Resolution
+                const resolution = `${videoStats.frameWidth || '-'}x${videoStats.frameHeight || '-'}`;
+                document.getElementById('video-resolution').textContent = resolution;
+                
+                // Bitrate (convert to Mbps)
+                if (videoStats.bytesReceived && videoStats.timestamp) {
+                    const bitrate = ((videoStats.bytesReceived * 8) / 1000000).toFixed(2);
+                    document.getElementById('video-bitrate').textContent = `${bitrate} Mbps`;
+                }
+                
+                // FPS
+                const fps = videoStats.framesPerSecond || videoElement.getVideoPlaybackQuality?.().totalVideoFrames || '-';
+                document.getElementById('video-fps').textContent = fps !== '-' ? `${Math.round(fps)} fps` : '-';
+                
+                // Latency/Jitter
+                const jitter = videoStats.jitter ? `${(videoStats.jitter * 1000).toFixed(0)} ms` : '-';
+                document.getElementById('video-latency').textContent = jitter;
+            }
+        } catch (error) {
+            console.error('Error getting stream stats:', error);
+        }
+    }, 1000); // Update every second
 }
 
 // Legacy functions kept for compatibility
