@@ -52,6 +52,7 @@ function init() {
     initializeFirebase();
     
     // Hide loader and show content after layout is fully stable
+    // Wait longer to ensure WebRTC negotiation is complete
     setTimeout(() => {
         const loader = document.getElementById('page-loader');
         const container = document.querySelector('.container');
@@ -65,7 +66,7 @@ function init() {
                 loader.classList.add('hidden');
             }, 300);
         }
-    }, 1500);
+    }, 2000);
 }
 
 // Initialize Firebase Realtime Features
