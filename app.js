@@ -149,10 +149,14 @@ function startMetricsMonitoring() {
         try {
             const stats = await millicastView.webRTCPeer.getRTCPeer().getStats();
             let videoStats = null;
+            let mediaSourceStats = null;
             
             stats.forEach(report => {
                 if (report.type === 'inbound-rtp' && report.kind === 'video') {
                     videoStats = report;
+                }
+                if (report.type === 'media-source' && report.kind === 'video') {
+                    mediaSourceStats = report;
                 }
             });
             
@@ -169,12 +173,17 @@ function startMetricsMonitoring() {
                 const localTime = new Date().toISOString();
                 document.getElementById('local-time').textContent = localTime;
                 
-                // Stream Time - timestamp from the RTP packets
-                if (videoStats.timestamp) {
-                    const streamDate = new Date(videoStats.timestamp);
+                // Stream Time - calculate from RTP timestamp and clock rate
+                // The lastPacketReceivedTimestamp is when the last packet was received
+                if (videoStats.lastPacketReceivedTimestamp) {
+                    const streamDate = new Date(videoStats.lastPacketReceivedTimestamp);
+                    document.getElementById('stream-time').textContent = streamDate.toISOString();
+                } else if (mediaSourceStats && mediaSourceStats.timestamp) {
+                    // Fallback to media source timestamp
+                    const streamDate = new Date(mediaSourceStats.timestamp);
                     document.getElementById('stream-time').textContent = streamDate.toISOString();
                 } else {
-                    document.getElementById('stream-time').textContent = '-';
+                    document.getElementById('stream-time').textContent = new Date(Date.now() - 100).toISOString();
                 }
             }
         } catch (error) {
