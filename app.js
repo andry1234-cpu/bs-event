@@ -152,26 +152,33 @@ function listenToMessages() {
         
         snapshot.forEach((childSnapshot) => {
             const message = childSnapshot.val();
-            // Don't re-add if it's from this user's send action (to avoid duplicates)
-            if (message && !message.isLocal) {
-                addMessageToUI(message);
-            }
+            addMessageToUI(message);
         });
     });
 }
 
 // Listen to incoming reactions
+let shownReactions = new Set();
+
 function listenToReactions() {
     const reactionsRef = ref(database, 'reactions');
+    const reactionsQuery = query(reactionsRef, orderByChild('timestamp'), limitToLast(50));
     
-    onValue(reactionsRef, (snapshot) => {
+    onValue(reactionsQuery, (snapshot) => {
         snapshot.forEach((childSnapshot) => {
+            const reactionId = childSnapshot.key;
             const reaction = childSnapshot.val();
             const reactionAge = Date.now() - reaction.timestamp;
             
-            // Only show reactions from the last few seconds and not from this user
-            if (reactionAge < CONFIG.reactionDuration && reaction.userId !== currentUserId) {
+            // Only show if not already shown and is recent
+            if (!shownReactions.has(reactionId) && reactionAge < CONFIG.reactionDuration) {
+                shownReactions.add(reactionId);
                 createFloatingReaction(reaction.emoji);
+                
+                // Remove from tracking after animation
+                setTimeout(() => {
+                    shownReactions.delete(reactionId);
+                }, CONFIG.reactionDuration + 1000);
             }
         });
     });
@@ -190,12 +197,9 @@ function sendMessage() {
         userId: currentUserId
     };
     
-    // Add to Firebase
+    // Add to Firebase only - will appear via listener
     const messagesRef = ref(database, 'messages');
     push(messagesRef, message);
-    
-    // Add to UI immediately
-    addMessageToUI({...message, isLocal: true});
     
     chatInput.value = '';
 }
@@ -260,16 +264,13 @@ function formatTime(timestamp) {
 
 // Reactions System
 function triggerReaction(emoji) {
-    // Add to Firebase
+    // Add to Firebase only - will appear via listener
     const reactionsRef = ref(database, 'reactions');
     push(reactionsRef, {
         emoji: emoji,
         userId: currentUserId,
         timestamp: Date.now()
     });
-    
-    // Show locally immediately
-    createFloatingReaction(emoji);
 }
 
 function createFloatingReaction(emoji) {
