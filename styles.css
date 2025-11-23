@@ -20,11 +20,14 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: linear-gradient(180deg, #000000 0%, #0A0A0A 50%, #000000 100%);
     color: var(--text-primary);
     line-height: 1.6;
     overflow-x: hidden;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .container {
@@ -57,6 +60,7 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    letter-spacing: -0.02em;
 }
 
 .user-info {
@@ -234,6 +238,7 @@ body {
 .chat-header h2 {
     font-size: 1.3rem;
     font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
 .online-count {
@@ -316,6 +321,7 @@ body {
     font-weight: 600;
     color: var(--primary-color);
     font-size: 0.9rem;
+    letter-spacing: -0.01em;
 }
 
 .message-time {
