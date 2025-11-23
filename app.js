@@ -48,7 +48,7 @@ function init() {
     
     usernameDisplay.textContent = currentUser;
     setupEventListeners();
-    initializeMillicast();
+    // initializeMillicast(); // Commented out - will be configured with real stream
     initializeFirebase();
 }
 

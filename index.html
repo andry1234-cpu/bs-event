@@ -26,18 +26,20 @@
                 <div class="player-container">
                     <!-- Video Player -->
                     <div id="castr-player">
-                        <!-- Millicast WebRTC Player -->
+                        <!-- HTML5 Video Player - Placeholder -->
                         <video 
                             id="millicast-video"
                             autoplay
                             muted
+                            loop
                             playsinline
                             controls>
+                            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
                         </video>
                         
-                        <div class="placeholder" id="placeholder">
+                        <div class="placeholder" id="placeholder" style="display: none;">
                             <p>🎥 Player Video</p>
-                            <small>Connessione a Millicast...</small>
+                            <small>Connessione stream...</small>
                         </div>
                     </div>
                     
