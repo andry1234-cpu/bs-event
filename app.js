@@ -65,7 +65,7 @@ function init() {
                 loader.classList.add('hidden');
             }, 300);
         }
-    }, 1000);
+    }, 1500);
 }
 
 // Initialize Firebase Realtime Features
