@@ -50,6 +50,14 @@ function init() {
     setupEventListeners();
     initializeMillicast();
     initializeFirebase();
+    
+    // Hide loader after a short delay to ensure everything is rendered
+    setTimeout(() => {
+        const loader = document.getElementById('page-loader');
+        if (loader) {
+            loader.classList.add('hidden');
+        }
+    }, 500);
 }
 
 // Initialize Firebase Realtime Features
