@@ -1,6 +1,7 @@
 // Firebase Configuration
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, onChildAdded, onDisconnect, set, serverTimestamp, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCmEbIjFLlLxVgLUqwsOLCsB0aoMWF6PJQ",
@@ -16,6 +17,8 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 // Configurazione
 const CONFIG = {
@@ -25,10 +28,11 @@ const CONFIG = {
 };
 
 // State Management
-let currentUser = 'Guest_' + Math.floor(Math.random() * 1000);
+let currentUser = null;
 let currentUserId = null;
 let messages = [];
 let onlineUsers = 1;
+let isAuthenticated = false;
 
 // DOM Elements (will be initialized after DOM is ready)
 let chatMessages, chatInput, sendBtn, reactionsOverlay, reactionButtons, usernameDisplay, onlineUsersDisplay, videoIframe;
@@ -46,10 +50,9 @@ function init() {
     onlineUsersDisplay = document.getElementById('online-users');
     videoIframe = document.getElementById('video-iframe');
     
-    usernameDisplay.textContent = currentUser;
     setupEventListeners();
+    setupAuth();
     initializeMillicast();
-    initializeFirebase();
     
     // Hide loader and show content after layout is fully stable
     // Wait longer to ensure WebRTC negotiation is complete
@@ -69,10 +72,69 @@ function init() {
     }, 2000);
 }
 
+// Setup Authentication
+function setupAuth() {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // User is signed in
+            isAuthenticated = true;
+            currentUser = user.displayName || user.email;
+            currentUserId = user.uid;
+            
+            // Update UI
+            usernameDisplay.textContent = currentUser;
+            
+            // Hide login, show edit button
+            const loginBtn = document.getElementById('login-btn');
+            const editBtn = document.getElementById('edit-username-btn');
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (editBtn) editBtn.style.display = 'inline-block';
+            
+            // Initialize Firebase features
+            initializeFirebase();
+        } else {
+            // User is signed out - show login
+            isAuthenticated = false;
+            currentUser = null;
+            currentUserId = null;
+            
+            usernameDisplay.textContent = 'Non autenticato';
+            
+            const loginBtn = document.getElementById('login-btn');
+            const editBtn = document.getElementById('edit-username-btn');
+            if (loginBtn) loginBtn.style.display = 'inline-block';
+            if (editBtn) editBtn.style.display = 'none';
+        }
+    });
+}
+
+// Google Sign In
+async function signInWithGoogle() {
+    try {
+        const result = await signInWithPopup(auth, googleProvider);
+        console.log('Login successful:', result.user.displayName);
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Errore durante il login: ' + error.message);
+    }
+}
+
+// Sign Out
+async function signOutUser() {
+    try {
+        await signOut(auth);
+        console.log('Logout successful');
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+}
+
 // Initialize Firebase Realtime Features
 function initializeFirebase() {
-    // Generate unique user ID
-    currentUserId = 'user_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    if (!currentUserId) {
+        console.error('User not authenticated');
+        return;
+    }
     
     // Setup presence system
     setupPresence();
@@ -382,6 +444,11 @@ function listenToReactions() {
 
 // Chat Functions
 function sendMessage() {
+    if (!isAuthenticated) {
+        alert('Devi effettuare il login per inviare messaggi');
+        return;
+    }
+    
     const messageText = chatInput.value.trim();
     
     if (!messageText) return;
@@ -460,6 +527,11 @@ function formatTime(timestamp) {
 
 // Reactions System
 function triggerReaction(emoji) {
+    if (!isAuthenticated) {
+        alert('Devi effettuare il login per inviare reactions');
+        return;
+    }
+    
     // Add to Firebase only - will appear via listener
     const reactionsRef = ref(database, 'reactions');
     push(reactionsRef, {
@@ -525,3 +597,7 @@ window.EventPage = {
     addMessageToUI,
     addSystemMessage
 };
+
+// Expose auth functions globally
+window.signInWithGoogle = signInWithGoogle;
+window.signOutUser = signOutUser;

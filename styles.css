@@ -177,6 +177,31 @@ html {
     color: var(--text-primary);
 }
 
+.login-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    color: #1f1f1f;
+    border: 1px solid #dadce0;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+}
+
+.login-btn:hover {
+    background: #f8f9fa;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.login-btn svg {
+    flex-shrink: 0;
+}
+
 .edit-username-btn {
     background: none;
     border: none;
