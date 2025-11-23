@@ -48,7 +48,7 @@ function init() {
     
     usernameDisplay.textContent = currentUser;
     setupEventListeners();
-    // initializeMillicast(); // Commented out - will be configured with real stream
+    initializeMillicast();
     initializeFirebase();
 }
 
@@ -99,9 +99,9 @@ async function initializeMillicast() {
     }
     
     // Millicast stream configuration
-    // Using Free Nationals demo stream
-    const streamAccountId = 'gCbP3q';
-    const streamName = 'freenationalswebrtc';
+    // Free Nationals demo stream (from Dolby OptiView)
+    const streamAccountId = 'k9Mwad';
+    const streamName = 'multiview';
     
     const tokenGenerator = () => window.millicast.Director.getSubscriber({
         streamAccountId: streamAccountId,
