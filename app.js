@@ -185,7 +185,10 @@ function startMetricsMonitoring() {
             if (videoStats) {
                 // Local Time - current browser time in ISO format
                 const localTime = new Date();
-                document.getElementById('local-time').textContent = localTime.toISOString();
+                const localTimeElement = document.getElementById('local-time');
+                if (localTimeElement) {
+                    localTimeElement.textContent = localTime.toISOString();
+                }
                 
                 // Stream Time - use timestamp from NTP or estimate from stats
                 // OptiView gets this from embedded metadata in the stream
@@ -195,11 +198,17 @@ function startMetricsMonitoring() {
                     : 500;
                 
                 const streamDate = new Date(Date.now() - estimatedLatency);
-                document.getElementById('stream-time').textContent = streamDate.toISOString();
+                const streamTimeElement = document.getElementById('stream-time');
+                if (streamTimeElement) {
+                    streamTimeElement.textContent = streamDate.toISOString();
+                }
                 
                 // Latency - calculate difference between local time and stream time
                 const latencyMs = localTime - streamDate;
-                document.getElementById('latency').textContent = `${latencyMs.toFixed(0)}ms`;
+                const latencyElement = document.getElementById('latency');
+                if (latencyElement) {
+                    latencyElement.textContent = `${latencyMs.toFixed(0)}ms`;
+                }
             }
         } catch (error) {
             console.error('Error getting stream stats:', error);
