@@ -137,6 +137,9 @@ async function initializeMillicast() {
 }
 
 // Monitor stream metrics
+let lastBytesReceived = 0;
+let lastTimestamp = 0;
+
 function startMetricsMonitoring() {
     const videoElement = document.getElementById('millicast-video');
     
@@ -155,22 +158,30 @@ function startMetricsMonitoring() {
             
             if (videoStats) {
                 // Resolution
-                const resolution = `${videoStats.frameWidth || '-'}x${videoStats.frameHeight || '-'}`;
+                const resolution = `${videoStats.frameWidth || 0}x${videoStats.frameHeight || 0}`;
                 document.getElementById('video-resolution').textContent = resolution;
                 
-                // Bitrate (convert to Mbps)
-                if (videoStats.bytesReceived && videoStats.timestamp) {
-                    const bitrate = ((videoStats.bytesReceived * 8) / 1000000).toFixed(2);
-                    document.getElementById('video-bitrate').textContent = `${bitrate} Mbps`;
+                // Bitrate (calculate based on bytes received over time)
+                if (lastBytesReceived > 0 && lastTimestamp > 0) {
+                    const bytesDiff = videoStats.bytesReceived - lastBytesReceived;
+                    const timeDiff = (videoStats.timestamp - lastTimestamp) / 1000; // Convert to seconds
+                    const bitrate = (bytesDiff * 8) / timeDiff / 1000000; // Convert to Mbps
+                    document.getElementById('video-bitrate').textContent = `${bitrate.toFixed(2)} Mbps`;
                 }
+                lastBytesReceived = videoStats.bytesReceived;
+                lastTimestamp = videoStats.timestamp;
                 
                 // FPS
-                const fps = videoStats.framesPerSecond || videoElement.getVideoPlaybackQuality?.().totalVideoFrames || '-';
-                document.getElementById('video-fps').textContent = fps !== '-' ? `${Math.round(fps)} fps` : '-';
+                const fps = videoStats.framesPerSecond || 0;
+                document.getElementById('video-fps').textContent = fps > 0 ? `${Math.round(fps)}` : '-';
                 
-                // Latency/Jitter
-                const jitter = videoStats.jitter ? `${(videoStats.jitter * 1000).toFixed(0)} ms` : '-';
-                document.getElementById('video-latency').textContent = jitter;
+                // Latency - calculated from jitterBufferDelay
+                if (videoStats.jitterBufferDelay && videoStats.jitterBufferEmittedCount) {
+                    const latency = (videoStats.jitterBufferDelay / videoStats.jitterBufferEmittedCount) * 1000;
+                    document.getElementById('video-latency').textContent = `${latency.toFixed(0)} ms`;
+                } else {
+                    document.getElementById('video-latency').textContent = '-';
+                }
             }
         } catch (error) {
             console.error('Error getting stream stats:', error);
