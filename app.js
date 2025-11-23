@@ -156,10 +156,24 @@ function startMetricsMonitoring() {
     const videoElement = document.getElementById('millicast-video');
     
     setInterval(async () => {
-        if (!millicastView || !millicastView.webRTCPeer) return;
+        if (!millicastView) {
+            console.log('Waiting for millicastView...');
+            return;
+        }
+        
+        if (!millicastView.webRTCPeer) {
+            console.log('Waiting for webRTCPeer...');
+            return;
+        }
         
         try {
-            const stats = await millicastView.webRTCPeer.getRTCPeer().getStats();
+            const peerConnection = millicastView.webRTCPeer.getRTCPeer();
+            if (!peerConnection) {
+                console.log('Waiting for peer connection...');
+                return;
+            }
+            
+            const stats = await peerConnection.getStats();
             let videoStats = null;
             
             stats.forEach(report => {
