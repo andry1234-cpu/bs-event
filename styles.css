@@ -874,6 +874,8 @@ html {
     word-wrap: break-word;
     font-size: 0.95rem;
     border: 1px solid rgba(139, 92, 246, 0.08);
+    border-left: 3px solid rgba(139, 92, 246, 0.5);
+    transition: border-color 0.2s ease;
 }
 
 .system-message {

@@ -529,9 +529,10 @@ function createMessageElement(message) {
     authorSpan.className = 'message-author';
     authorSpan.textContent = message.author;
     
-    // Apply user color
+    // Apply user color to name and message border
     if (message.userId) {
-        authorSpan.style.color = getUserColor(message.userId);
+        const userColor = getUserColor(message.userId);
+        authorSpan.style.color = userColor;
     }
     
     const timeSpan = document.createElement('span');
@@ -544,6 +545,12 @@ function createMessageElement(message) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
     contentDiv.textContent = message.content;
+    
+    // Apply user color to message border
+    if (message.userId) {
+        const userColor = getUserColor(message.userId);
+        contentDiv.style.borderLeftColor = userColor;
+    }
     
     messageDiv.appendChild(headerDiv);
     messageDiv.appendChild(contentDiv);
