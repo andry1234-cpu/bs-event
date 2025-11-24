@@ -550,7 +550,12 @@ function createMessageElement(message) {
     if (message.userId) {
         const userColor = getUserColor(message.userId);
         contentDiv.style.borderLeftColor = userColor;
-        contentDiv.style.background = `linear-gradient(135deg, ${userColor}08 0%, ${userColor}03 100%)`;
+        
+        // Convert hex to rgb for gradient with opacity
+        const r = parseInt(userColor.slice(1, 3), 16);
+        const g = parseInt(userColor.slice(3, 5), 16);
+        const b = parseInt(userColor.slice(5, 7), 16);
+        contentDiv.style.background = `linear-gradient(135deg, rgba(${r}, ${g}, ${b}, 0.12) 0%, rgba(${r}, ${g}, ${b}, 0.04) 100%)`;
     }
     
     messageDiv.appendChild(headerDiv);
