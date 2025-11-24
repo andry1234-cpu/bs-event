@@ -656,7 +656,105 @@ function setUsername(name) {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     init();
+    
+    // Dev testing: Press 'T' to toggle test panel
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 't' || e.key === 'T') {
+            toggleTestPanel();
+        }
+    });
 });
+
+// Dev Testing Panel
+function toggleTestPanel() {
+    let panel = document.getElementById('dev-test-panel');
+    
+    if (panel) {
+        panel.remove();
+        return;
+    }
+    
+    panel = document.createElement('div');
+    panel.id = 'dev-test-panel';
+    panel.innerHTML = `
+        <div style="position: fixed; top: 80px; right: 20px; background: rgba(0, 0, 0, 0.95); border: 2px solid #8B5CF6; border-radius: 12px; padding: 1.5rem; z-index: 10000; max-width: 300px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);">
+            <h3 style="margin: 0 0 1rem 0; color: #8B5CF6; font-size: 1.1rem;">🔧 Dev Test Panel</h3>
+            
+            <div style="margin-bottom: 1rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #fff; font-size: 0.9rem;">Color Palette:</h4>
+                <div id="color-palette" style="display: grid; gap: 0.5rem;"></div>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #fff; font-size: 0.9rem;">Test Messages:</h4>
+                <button id="add-test-messages" style="width: 100%; padding: 0.5rem; background: #8B5CF6; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 0.9rem;">Add Sample Messages</button>
+            </div>
+            
+            <button id="close-test-panel" style="width: 100%; padding: 0.5rem; background: #dc2626; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem;">Close (or press T)</button>
+        </div>
+    `;
+    
+    document.body.appendChild(panel);
+    
+    // Show color palette
+    const colors = [
+        '#8B5CF6', '#3B82F6', '#A78BFA', '#6366F1',
+        '#8B5CF6', '#7C3AED', '#6D28D9', '#5B21B6'
+    ];
+    
+    const colorPalette = panel.querySelector('#color-palette');
+    colors.forEach((color, index) => {
+        const colorDiv = document.createElement('div');
+        colorDiv.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        `;
+        colorDiv.innerHTML = `
+            <div style="width: 20px; height: 20px; background: ${color}; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);"></div>
+            <span style="color: #fff; font-size: 0.8rem; font-family: monospace;">${color}</span>
+        `;
+        colorPalette.appendChild(colorDiv);
+    });
+    
+    // Add test messages button
+    panel.querySelector('#add-test-messages').addEventListener('click', () => {
+        addTestMessages();
+    });
+    
+    // Close button
+    panel.querySelector('#close-test-panel').addEventListener('click', () => {
+        panel.remove();
+    });
+}
+
+function addTestMessages() {
+    const testUsers = [
+        { name: 'Alice Rossi', id: 'user001', message: 'Ciao a tutti! 👋' },
+        { name: 'Marco Bianchi', id: 'user002', message: 'Evento fantastico!' },
+        { name: 'Sofia Verde', id: 'user003', message: 'Non vedo l\'ora di iniziare 🚀' },
+        { name: 'Luca Neri', id: 'user004', message: 'Ottima organizzazione!' },
+        { name: 'Giulia Blu', id: 'user005', message: 'Grazie per l\'invito ❤️' },
+        { name: 'Andrea Viola', id: 'user006', message: 'La qualità video è eccellente!' },
+        { name: 'Chiara Rosa', id: 'user007', message: 'Chat molto interattiva 💬' },
+        { name: 'Matteo Oro', id: 'user008', message: 'Bending Spoons forever! 🥄' }
+    ];
+    
+    testUsers.forEach((user, index) => {
+        setTimeout(() => {
+            const testMessage = {
+                author: user.name,
+                userId: user.id,
+                content: user.message,
+                timestamp: Date.now() + index
+            };
+            addMessageToUI(testMessage);
+        }, index * 200);
+    });
+}
 
 // Expose functions for external use
 window.EventPage = {
