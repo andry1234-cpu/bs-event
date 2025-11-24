@@ -180,18 +180,25 @@ function setupEventListeners() {
     const userDropdown = document.getElementById('user-dropdown');
     
     if (usernameDisplay) {
-        usernameDisplay.addEventListener('click', (e) => {
+        const toggleDropdown = (e) => {
             e.stopPropagation();
+            e.preventDefault();
             userDropdown.classList.toggle('show');
-        });
+        };
+        
+        usernameDisplay.addEventListener('click', toggleDropdown);
+        usernameDisplay.addEventListener('touchend', toggleDropdown);
     }
     
     // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
+    const closeDropdown = (e) => {
         if (userDropdown && !e.target.closest('.user-menu')) {
             userDropdown.classList.remove('show');
         }
-    });
+    };
+    
+    document.addEventListener('click', closeDropdown);
+    document.addEventListener('touchend', closeDropdown);
     
     // Username edit (legacy - kept for compatibility)
     const editUsernameBtn = document.getElementById('edit-username-btn');
