@@ -546,10 +546,11 @@ function createMessageElement(message) {
     contentDiv.className = 'message-content';
     contentDiv.textContent = message.content;
     
-    // Apply user color to message border
+    // Apply user color to message border and background gradient
     if (message.userId) {
         const userColor = getUserColor(message.userId);
         contentDiv.style.borderLeftColor = userColor;
+        contentDiv.style.background = `linear-gradient(135deg, ${userColor}08 0%, ${userColor}03 100%)`;
     }
     
     messageDiv.appendChild(headerDiv);
