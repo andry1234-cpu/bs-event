@@ -1,6 +1,6 @@
 // Firebase Configuration
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, onChildAdded, onDisconnect, set, serverTimestamp, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, onChildAdded, onDisconnect, set, get, remove, serverTimestamp, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -33,6 +33,7 @@ let currentUserId = null;
 let messages = [];
 let onlineUsers = 1;
 let isAuthenticated = false;
+let userColors = {}; // Store user colors
 
 // DOM Elements (will be initialized after DOM is ready)
 let chatMessages, chatInput, sendBtn, reactionsOverlay, reactionButtons, usernameDisplay, onlineUsersDisplay, videoIframe;
@@ -445,6 +446,34 @@ function listenToMessages() {
             addMessageToUI(message);
         });
     });
+    
+    // Also listen to individual message reaction updates
+    onValue(messagesRef, (snapshot) => {
+        snapshot.forEach((childSnapshot) => {
+            const message = childSnapshot.val();
+            const messageId = childSnapshot.key;
+            
+            // Update reactions display if message exists in DOM
+            const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageEl) {
+                updateMessageReactions(messageEl, message.reactions || {});
+            }
+        });
+    });
+}
+
+function updateMessageReactions(messageEl, reactions) {
+    const reactionsDisplay = messageEl.querySelector('.reactions-display');
+    if (!reactionsDisplay) return;
+    
+    reactionsDisplay.innerHTML = '';
+    
+    Object.entries(reactions).forEach(([emoji, users]) => {
+        if (users && users.length > 0) {
+            const reactionBtn = createReactionButton(emoji, users, messageEl.dataset.messageId);
+            reactionsDisplay.appendChild(reactionBtn);
+        }
+    });
 }
 
 // Listen to incoming reactions
@@ -491,7 +520,8 @@ function sendMessage() {
         author: currentUser,
         content: messageText,
         timestamp: Date.now(),
-        userId: currentUserId
+        userId: currentUserId,
+        reactions: {}
     };
     
     // Add to Firebase only - will appear via listener
@@ -519,6 +549,7 @@ function addMessage(message) {
 function createMessageElement(message) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
+    messageDiv.dataset.messageId = message.timestamp; // For reactions
     
     const headerDiv = document.createElement('div');
     headerDiv.className = 'message-header';
@@ -526,6 +557,11 @@ function createMessageElement(message) {
     const authorSpan = document.createElement('span');
     authorSpan.className = 'message-author';
     authorSpan.textContent = message.author;
+    
+    // Apply user color
+    if (message.userId) {
+        authorSpan.style.color = getUserColor(message.userId);
+    }
     
     const timeSpan = document.createElement('span');
     timeSpan.className = 'message-time';
@@ -540,6 +576,34 @@ function createMessageElement(message) {
     
     messageDiv.appendChild(headerDiv);
     messageDiv.appendChild(contentDiv);
+    
+    // Add reactions bar
+    const reactionsBar = document.createElement('div');
+    reactionsBar.className = 'message-reactions-bar';
+    
+    // Add reaction button
+    const addReactionBtn = document.createElement('button');
+    addReactionBtn.className = 'add-reaction-btn';
+    addReactionBtn.textContent = '😊';
+    addReactionBtn.title = 'Aggiungi reaction';
+    addReactionBtn.onclick = () => showReactionPicker(message.timestamp);
+    reactionsBar.appendChild(addReactionBtn);
+    
+    // Display existing reactions
+    const reactionsDisplay = document.createElement('div');
+    reactionsDisplay.className = 'reactions-display';
+    reactionsDisplay.id = `reactions-${message.timestamp}`;
+    
+    if (message.reactions) {
+        Object.entries(message.reactions).forEach(([emoji, users]) => {
+            const reactionBtn = createReactionButton(emoji, users, message.timestamp);
+            reactionsDisplay.appendChild(reactionBtn);
+        });
+    }
+    
+    reactionsBar.appendChild(reactionsDisplay);
+    
+    messageDiv.appendChild(reactionsBar);
     
     return messageDiv;
 }
@@ -559,7 +623,136 @@ function formatTime(timestamp) {
     return `${hours}:${minutes}`;
 }
 
-// Reactions System
+// Generate consistent color for user
+function getUserColor(userId) {
+    if (userColors[userId]) {
+        return userColors[userId];
+    }
+    
+    // Bending Spoons gradient colors
+    const colors = [
+        '#8B5CF6', // Purple
+        '#3B82F6', // Blue
+        '#A78BFA', // Light Purple
+        '#6366F1', // Indigo
+        '#8B5CF6', // Violet
+        '#7C3AED', // Deep Purple
+        '#6D28D9', // Rich Purple
+        '#5B21B6', // Dark Purple
+    ];
+    
+    // Generate consistent index from userId
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+        hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % colors.length;
+    
+    userColors[userId] = colors[index];
+    return colors[index];
+}
+
+// Message Reactions Helper Functions
+function createReactionButton(emoji, users, messageTimestamp) {
+    const btn = document.createElement('button');
+    btn.className = 'reaction-bubble';
+    
+    const userIds = Array.isArray(users) ? users : [];
+    const hasReacted = userIds.includes(currentUserId);
+    
+    if (hasReacted) {
+        btn.classList.add('reacted');
+    }
+    
+    btn.innerHTML = `${emoji} <span class="reaction-count">${userIds.length}</span>`;
+    btn.onclick = () => toggleReaction(messageTimestamp, emoji);
+    
+    return btn;
+}
+
+function showReactionPicker(messageTimestamp) {
+    // Simple emoji picker with common reactions
+    const emojis = ['👍', '❤️', '😂', '😮', '🎉', '🚀', '👏', '🔥'];
+    
+    // Remove existing picker if any
+    const existingPicker = document.querySelector('.emoji-picker');
+    if (existingPicker) {
+        existingPicker.remove();
+    }
+    
+    const picker = document.createElement('div');
+    picker.className = 'emoji-picker';
+    
+    emojis.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.className = 'emoji-option';
+        btn.textContent = emoji;
+        btn.onclick = () => {
+            addReaction(messageTimestamp, emoji);
+            picker.remove();
+        };
+        picker.appendChild(btn);
+    });
+    
+    // Position picker near the message
+    const messageEl = document.querySelector(`[data-message-id="${messageTimestamp}"]`);
+    if (messageEl) {
+        messageEl.appendChild(picker);
+    }
+    
+    // Close picker when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', function closePickerHandler(e) {
+            if (!picker.contains(e.target)) {
+                picker.remove();
+                document.removeEventListener('click', closePickerHandler);
+            }
+        }, { once: true });
+    }, 100);
+}
+
+async function addReaction(messageTimestamp, emoji) {
+    if (!isAuthenticated) {
+        alert('Devi effettuare il login per reagire ai messaggi');
+        return;
+    }
+    
+    const messageRef = ref(database, `messages/${messageTimestamp}/reactions/${emoji}`);
+    const snapshot = await get(messageRef);
+    const users = snapshot.exists() ? snapshot.val() : [];
+    
+    if (!users.includes(currentUserId)) {
+        users.push(currentUserId);
+        await set(messageRef, users);
+    }
+}
+
+async function toggleReaction(messageTimestamp, emoji) {
+    if (!isAuthenticated) {
+        alert('Devi effettuare il login per reagire ai messaggi');
+        return;
+    }
+    
+    const messageRef = ref(database, `messages/${messageTimestamp}/reactions/${emoji}`);
+    const snapshot = await get(messageRef);
+    const users = snapshot.exists() ? snapshot.val() : [];
+    
+    if (users.includes(currentUserId)) {
+        // Remove reaction
+        const newUsers = users.filter(id => id !== currentUserId);
+        if (newUsers.length === 0) {
+            await remove(messageRef);
+        } else {
+            await set(messageRef, newUsers);
+        }
+    } else {
+        // Add reaction
+        users.push(currentUserId);
+        await set(messageRef, users);
+    }
+}
+
+// Reactions System (for reactions bar at top)
 function triggerReaction(emoji) {
     if (!isAuthenticated) {
         alert('Devi effettuare il login per inviare reactions');
