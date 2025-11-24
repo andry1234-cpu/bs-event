@@ -836,7 +836,6 @@ html {
     flex-direction: column;
     gap: 0.2rem;
     animation: slideIn 0.3s ease;
-    position: relative;
 }
 
 @keyframes slideIn {
@@ -875,99 +874,6 @@ html {
     word-wrap: break-word;
     font-size: 0.95rem;
     border: 1px solid rgba(139, 92, 246, 0.08);
-}
-
-/* Message Reactions */
-.message-reactions-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin-top: 0.4rem;
-    flex-wrap: wrap;
-}
-
-.add-reaction-btn {
-    background: rgba(139, 92, 246, 0.1);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    color: var(--text-primary);
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    opacity: 0.6;
-}
-
-.add-reaction-btn:hover {
-    background: rgba(139, 92, 246, 0.2);
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-.reactions-display {
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-}
-
-.reaction-bubble {
-    background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.25);
-    color: var(--text-primary);
-    padding: 0.25rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.reaction-bubble:hover {
-    background: rgba(139, 92, 246, 0.25);
-    transform: translateY(-2px);
-}
-
-.reaction-bubble.reacted {
-    background: rgba(139, 92, 246, 0.3);
-    border-color: rgba(139, 92, 246, 0.5);
-    font-weight: 600;
-}
-
-.reaction-count {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
-
-.emoji-picker {
-    position: absolute;
-    background: var(--bg-primary);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    border-radius: 12px;
-    padding: 0.5rem;
-    display: flex;
-    gap: 0.3rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    margin-top: 0.3rem;
-    flex-wrap: wrap;
-    max-width: 200px;
-}
-
-.emoji-option {
-    background: rgba(139, 92, 246, 0.1);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    padding: 0.4rem 0.6rem;
-    border-radius: 8px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.emoji-option:hover {
-    background: rgba(139, 92, 246, 0.3);
-    transform: scale(1.15);
 }
 
 .system-message {
