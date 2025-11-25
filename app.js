@@ -1508,26 +1508,36 @@ function renderSlotsConfig() {
     reactionSlots.forEach((emoji, index) => {
         const slotDiv = document.createElement('div');
         slotDiv.className = 'slot-config';
-        slotDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 2px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.2s;';
+        slotDiv.dataset.slotIndex = index;
+        
+        const isSelected = selectedSlotIndex === index;
+        const borderColor = isSelected ? '#10b981' : 'rgba(139, 92, 246, 0.3)';
+        const bgColor = isSelected ? 'rgba(16, 185, 129, 0.2)' : 'rgba(139, 92, 246, 0.1)';
+        const baseStyle = `background: ${bgColor}; border: 2px solid ${borderColor}; border-radius: 12px; padding: 0.75rem; text-align: center; cursor: pointer; transition: all 0.2s;`;
+        slotDiv.style.cssText = baseStyle;
         
         const isCustom = emoji.startsWith('http') || emoji.startsWith('data:');
         
         slotDiv.innerHTML = `
-            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Slot ${index + 1}</div>
-            <div style="font-size: 3rem; margin: 0.5rem 0;">
-                ${isCustom ? `<img src="${emoji}" style="width: 48px; height: 48px; object-fit: contain;">` : emoji}
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">${isSelected ? '✓ ' : ''}Slot ${index + 1}</div>
+            <div style="font-size: 2rem; margin: 0.5rem 0;">
+                ${isCustom ? `<img src="${emoji}" style="width: 36px; height: 36px; object-fit: contain;">` : emoji}
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);">Click to change</div>
+            <div style="font-size: 0.7rem; color: var(--text-secondary);">${isSelected ? 'Selezionato' : 'Click to change'}</div>
         `;
         
         slotDiv.addEventListener('click', () => selectSlot(index));
         slotDiv.addEventListener('mouseenter', () => {
-            slotDiv.style.borderColor = '#8B5CF6';
-            slotDiv.style.background = 'rgba(139, 92, 246, 0.2)';
+            if (selectedSlotIndex !== index) {
+                slotDiv.style.borderColor = '#8B5CF6';
+                slotDiv.style.background = 'rgba(139, 92, 246, 0.2)';
+            }
         });
         slotDiv.addEventListener('mouseleave', () => {
-            slotDiv.style.borderColor = 'rgba(139, 92, 246, 0.3)';
-            slotDiv.style.background = 'rgba(139, 92, 246, 0.1)';
+            if (selectedSlotIndex !== index) {
+                slotDiv.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+                slotDiv.style.background = 'rgba(139, 92, 246, 0.1)';
+            }
         });
         
         slotsContainer.appendChild(slotDiv);
@@ -1547,8 +1557,8 @@ function renderAvailableEmojis() {
     defaultEmojis.forEach(emoji => {
         const emojiDiv = document.createElement('div');
         emojiDiv.className = 'emoji-item';
-        emojiDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s;';
-        emojiDiv.innerHTML = `<div style="font-size: 2.5rem;">${emoji}</div>`;
+        emojiDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 0.6rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s;';
+        emojiDiv.innerHTML = `<div style="font-size: 1.8rem;">${emoji}</div>`;
         emojiDiv.onclick = () => assignEmojiToSlot(emoji);
         emojiDiv.addEventListener('mouseenter', () => {
             emojiDiv.style.borderColor = '#8B5CF6';
@@ -1565,10 +1575,10 @@ function renderAvailableEmojis() {
     customEmojis.forEach(emoji => {
         const emojiDiv = document.createElement('div');
         emojiDiv.className = 'emoji-item';
-        emojiDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s; position: relative;';
+        emojiDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 0.6rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s; position: relative;';
         emojiDiv.innerHTML = `
-            <img src="${emoji.url}" style="width: 48px; height: 48px; object-fit: contain;">
-            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">${emoji.name}</div>
+            <img src="${emoji.url}" style="width: 36px; height: 36px; object-fit: contain;">
+            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.4rem;">${emoji.name}</div>
             <button class="delete-emoji-btn" data-id="${emoji.id}" style="position: absolute; top: 4px; right: 4px; background: rgba(220, 38, 38, 0.8); border: none; border-radius: 4px; color: white; width: 20px; height: 20px; cursor: pointer; font-size: 0.7rem;">✕</button>
         `;
         
@@ -1599,17 +1609,8 @@ let selectedSlotIndex = null;
 function selectSlot(index) {
     selectedSlotIndex = index;
     
-    // Visual feedback
-    const slots = document.querySelectorAll('.slot-config');
-    slots.forEach((slot, i) => {
-        if (i === index) {
-            slot.style.borderColor = '#10b981';
-            slot.style.background = 'rgba(16, 185, 129, 0.2)';
-        } else {
-            slot.style.borderColor = 'rgba(139, 92, 246, 0.3)';
-            slot.style.background = 'rgba(139, 92, 246, 0.1)';
-        }
-    });
+    // Re-render slots to show selection
+    renderSlotsConfig();
     
     // Show message
     const container = document.getElementById('available-emojis');
@@ -1618,8 +1619,8 @@ function selectSlot(index) {
     
     const msg = document.createElement('div');
     msg.className = 'selection-message';
-    msg.style.cssText = 'grid-column: 1 / -1; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; border-radius: 8px; padding: 0.75rem; text-align: center; color: #10b981; font-weight: 600;';
-    msg.textContent = `Slot ${index + 1} selezionato - Clicca su un'emoji per assegnarla`;
+    msg.style.cssText = 'grid-column: 1 / -1; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; border-radius: 8px; padding: 0.75rem; text-align: center; color: #10b981; font-weight: 600; margin-bottom: 1rem;';
+    msg.textContent = `✓ Slot ${index + 1} selezionato - Clicca su un'emoji per assegnarla`;
     container.insertBefore(msg, container.firstChild);
 }
 
