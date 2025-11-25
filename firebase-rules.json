@@ -1,18 +1,18 @@
 {
   "rules": {
     "messages": {
-      ".read": "auth != null",
-      ".write": "auth != null",
+      ".read": "auth != null && (auth.token.email.matches(/.*@bendingspoons\\.com$/) || auth.token.email.matches(/.*@dedgroup\\.com$/) || auth.token.email.matches(/.*@urlo\\.events$/))",
+      ".write": "auth != null && (auth.token.email.matches(/.*@bendingspoons\\.com$/) || auth.token.email.matches(/.*@dedgroup\\.com$/) || auth.token.email.matches(/.*@urlo\\.events$/))",
       ".indexOn": ["timestamp"]
     },
     "reactions": {
-      ".read": "auth != null",
-      ".write": "auth != null",
+      ".read": "auth != null && (auth.token.email.matches(/.*@bendingspoons\\.com$/) || auth.token.email.matches(/.*@dedgroup\\.com$/) || auth.token.email.matches(/.*@urlo\\.events$/))",
+      ".write": "auth != null && (auth.token.email.matches(/.*@bendingspoons\\.com$/) || auth.token.email.matches(/.*@dedgroup\\.com$/) || auth.token.email.matches(/.*@urlo\\.events$/))",
       ".indexOn": ["timestamp"]
     },
     "presence": {
-      ".read": "auth != null",
-      ".write": "auth != null",
+      ".read": "auth != null && (auth.token.email.matches(/.*@bendingspoons\\.com$/) || auth.token.email.matches(/.*@dedgroup\\.com$/) || auth.token.email.matches(/.*@urlo\\.events$/))",
+      ".write": "auth != null && (auth.token.email.matches(/.*@dedgroup\\.com$/) || auth.token.email.matches(/.*@urlo\\.events$/) || auth.token.email.matches(/.*@bendingspoons\\.com$/))",
       ".indexOn": ["lastSeen"]
     }
   }
