@@ -1107,7 +1107,8 @@ function triggerReaction(emoji) {
     push(reactionsRef, {
         emoji: emoji,
         userId: currentUserId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        randomId: Math.random().toString(36).substring(7) // Prevent duplicate detection
     });
 }
 
@@ -1693,7 +1694,8 @@ function triggerCustomReaction(imageUrl) {
         emoji: imageUrl, // Store the URL
         isCustom: true,
         userId: currentUserId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        randomId: Math.random().toString(36).substring(7) // Prevent duplicate detection
     });
 }
 
