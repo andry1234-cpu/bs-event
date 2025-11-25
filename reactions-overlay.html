@@ -170,6 +170,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyCmEbIjFLlLxVgLUqwsOLCsB0aoMWF6PJQ",
@@ -184,12 +185,15 @@
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+        const auth = getAuth(app);
+        const googleProvider = new GoogleAuthProvider();
 
         const statusEl = document.getElementById('status');
         const statusTextEl = document.getElementById('status-text');
         const reactionsContainer = document.getElementById('reactions-container');
 
         let processedReactions = new Set();
+        let isAuthenticated = false;
 
         function updateStatus(text, isError = false) {
             statusTextEl.textContent = text;
@@ -277,47 +281,87 @@
             createReaction(emoji);
         }
 
-        // Listener per le reactions
-        const reactionsRef = ref(database, 'reactions');
-        const reactionsQuery = query(reactionsRef, orderByChild('timestamp'), limitToLast(50));
+        // Setup authentication
+        function setupReactionsListener() {
+            const reactionsRef = ref(database, 'reactions');
+            const reactionsQuery = query(reactionsRef, orderByChild('timestamp'), limitToLast(50));
 
-        let isFirstLoad = true;
+            let isFirstLoad = true;
 
-        onValue(reactionsQuery, (snapshot) => {
-            if (!snapshot.exists()) {
-                updateStatus('In attesa di reactions...');
-                return;
-            }
+            onValue(reactionsQuery, (snapshot) => {
+                if (!snapshot.exists()) {
+                    updateStatus('In attesa di reactions...');
+                    return;
+                }
 
-            updateStatus('Connesso - In ascolto reactions');
+                updateStatus('Connesso - In ascolto reactions');
 
-            const reactions = [];
-            snapshot.forEach((child) => {
-                reactions.push({
-                    id: child.key,
-                    ...child.val()
+                const reactions = [];
+                snapshot.forEach((child) => {
+                    reactions.push({
+                        id: child.key,
+                        ...child.val()
+                    });
                 });
+
+                // Ordina per timestamp
+                reactions.sort((a, b) => a.timestamp - b.timestamp);
+
+                if (isFirstLoad) {
+                    // Al primo caricamento, segna tutte come processate senza mostrarle
+                    reactions.forEach(reaction => {
+                        const reactionId = `${reaction.emoji}-${reaction.timestamp}`;
+                        processedReactions.add(reactionId);
+                    });
+                    isFirstLoad = false;
+                } else {
+                    // Dopo il primo caricamento, mostra solo le nuove
+                    reactions.forEach(reaction => {
+                        handleReaction(reaction);
+                    });
+                }
+            }, (error) => {
+                console.error('Errore Firebase:', error);
+                updateStatus('Errore di connessione - Verifica autenticazione', true);
             });
+        }
 
-            // Ordina per timestamp
-            reactions.sort((a, b) => a.timestamp - b.timestamp);
-
-            if (isFirstLoad) {
-                // Al primo caricamento, segna tutte come processate senza mostrarle
-                reactions.forEach(reaction => {
-                    const reactionId = `${reaction.emoji}-${reaction.timestamp}`;
-                    processedReactions.add(reactionId);
-                });
-                isFirstLoad = false;
+        // Monitor auth state
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                isAuthenticated = true;
+                updateStatus(`Autenticato come ${user.email}`);
+                
+                // Check domain
+                const emailDomain = user.email.split('@')[1];
+                const allowedDomains = ['bendingspoons.com', 'dedgroup.com', 'urlo.events'];
+                
+                if (!allowedDomains.includes(emailDomain)) {
+                    updateStatus(`Dominio non autorizzato: @${emailDomain}`, true);
+                    await auth.signOut();
+                    return;
+                }
+                
+                // Start listening to reactions
+                setupReactionsListener();
             } else {
-                // Dopo il primo caricamento, mostra solo le nuove
-                reactions.forEach(reaction => {
-                    handleReaction(reaction);
-                });
+                isAuthenticated = false;
+                updateStatus('⚠️ Click per autenticarsi', true);
+                
+                // Add click listener for authentication
+                statusEl.style.cursor = 'pointer';
+                statusEl.onclick = async () => {
+                    try {
+                        updateStatus('Autenticazione in corso...');
+                        await signInWithPopup(auth, googleProvider);
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        if (error.code !== 'auth/cancelled-popup-request' && error.code !== 'auth/popup-closed-by-user') {
+                            updateStatus('Errore login: ' + error.message, true);
+                        }
+                    }
+                };
             }
-        }, (error) => {
-            console.error('Errore Firebase:', error);
-            updateStatus('Errore di connessione', true);
         });
 
         console.log('Overlay reactions inizializzato - 1920x1080');
