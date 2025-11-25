@@ -1557,7 +1557,7 @@ function renderAvailableEmojis() {
     defaultEmojis.forEach(emoji => {
         const emojiDiv = document.createElement('div');
         emojiDiv.className = 'emoji-item';
-        emojiDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 0.6rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s;';
+        emojiDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 0.6rem; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; min-height: 70px;';
         emojiDiv.innerHTML = `<div style="font-size: 1.8rem;">${emoji}</div>`;
         emojiDiv.onclick = () => assignEmojiToSlot(emoji);
         emojiDiv.addEventListener('mouseenter', () => {
@@ -1575,10 +1575,10 @@ function renderAvailableEmojis() {
     customEmojis.forEach(emoji => {
         const emojiDiv = document.createElement('div');
         emojiDiv.className = 'emoji-item';
-        emojiDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 0.6rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s; position: relative;';
+        emojiDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 0.6rem; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; position: relative; min-height: 70px;';
         emojiDiv.innerHTML = `
-            <img src="${emoji.url}" style="width: 36px; height: 36px; object-fit: contain;">
-            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.4rem;">${emoji.name}</div>
+            <img src="${emoji.url}" style="width: 36px; height: 36px; object-fit: contain; margin-bottom: 0.25rem;">
+            <div style="font-size: 0.65rem; color: var(--text-secondary); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${emoji.name}</div>
             <button class="delete-emoji-btn" data-id="${emoji.id}" style="position: absolute; top: 4px; right: 4px; background: rgba(220, 38, 38, 0.8); border: none; border-radius: 4px; color: white; width: 20px; height: 20px; cursor: pointer; font-size: 0.7rem;">✕</button>
         `;
         
