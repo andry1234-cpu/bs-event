@@ -2,7 +2,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, onChildAdded, onDisconnect, set, serverTimestamp, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCmEbIjFLlLxVgLUqwsOLCsB0aoMWF6PJQ",
@@ -19,7 +18,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
-const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
 // Configurazione
@@ -165,20 +163,26 @@ function initializeFirebase() {
     addSystemMessage('Connesso! La chat è sincronizzata.');
 }
 
-// Load custom emojis without UI update (for initial load)
+// Load custom emojis from database (base64)
 async function loadCustomEmojisQuiet() {
     try {
-        const emojisRef = storageRef(storage, 'custom-emojis/');
-        const result = await listAll(emojisRef);
-        
-        customEmojis = [];
-        
-        for (const item of result.items) {
-            const url = await getDownloadURL(item);
-            customEmojis.push({ name: item.name, url: url, path: item.fullPath });
-        }
-        
-        updateReactionsBar();
+        const emojisRef = ref(database, 'customEmojis');
+        onValue(emojisRef, (snapshot) => {
+            customEmojis = [];
+            
+            if (snapshot.exists()) {
+                const emojisData = snapshot.val();
+                Object.entries(emojisData).forEach(([key, emoji]) => {
+                    customEmojis.push({
+                        id: key,
+                        name: emoji.name,
+                        url: emoji.data // base64 data
+                    });
+                });
+            }
+            
+            updateReactionsBar();
+        });
     } catch (error) {
         console.error('Error loading custom emojis:', error);
     }
@@ -1222,40 +1226,42 @@ function toggleAdminPanel() {
 
 async function loadCustomEmojis() {
     try {
-        const emojisRef = storageRef(storage, 'custom-emojis/');
-        const result = await listAll(emojisRef);
+        const emojisRef = ref(database, 'customEmojis');
+        const snapshot = await new Promise((resolve) => {
+            onValue(emojisRef, resolve, { onlyOnce: true });
+        });
         
         customEmojis = [];
         const emojisList = document.getElementById('custom-emojis-list');
         
-        if (result.items.length === 0) {
+        if (!snapshot.exists()) {
             emojisList.innerHTML = '<p class="empty-text">Nessuna emoji custom caricata</p>';
             updateReactionsBar();
             return;
         }
         
         emojisList.innerHTML = '';
+        const emojisData = snapshot.val();
         
-        for (const item of result.items) {
-            const url = await getDownloadURL(item);
-            customEmojis.push({ name: item.name, url: url, path: item.fullPath });
+        Object.entries(emojisData).forEach(([key, emoji]) => {
+            customEmojis.push({ id: key, name: emoji.name, url: emoji.data });
             
             const emojiDiv = document.createElement('div');
             emojiDiv.className = 'emoji-item';
             emojiDiv.innerHTML = `
-                <img src="${url}" alt="${item.name}" class="emoji-preview">
-                <span class="emoji-name">${item.name}</span>
-                <button class="delete-emoji-btn" data-path="${item.fullPath}">🗑️</button>
+                <img src="${emoji.data}" alt="${emoji.name}" class="emoji-preview">
+                <span class="emoji-name">${emoji.name}</span>
+                <button class="delete-emoji-btn" data-id="${key}">🗑️</button>
             `;
             
             emojiDiv.querySelector('.delete-emoji-btn').addEventListener('click', async (e) => {
                 if (confirm('Eliminare questa emoji?')) {
-                    await deleteCustomEmoji(e.target.dataset.path);
+                    await deleteCustomEmoji(e.target.dataset.id);
                 }
             });
             
             emojisList.appendChild(emojiDiv);
-        }
+        });
         
         updateReactionsBar();
         
@@ -1282,12 +1288,20 @@ async function uploadCustomEmoji(file) {
         const uploadArea = document.getElementById('upload-area');
         uploadArea.innerHTML = '<p class="uploading-text">Caricamento... ⏳</p>';
         
-        // Upload to Firebase Storage
-        const timestamp = Date.now();
-        const fileName = `${timestamp}_${file.name}`;
-        const emojiRef = storageRef(storage, `custom-emojis/${fileName}`);
+        // Convert to base64
+        const base64Data = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
+        });
         
-        await uploadBytes(emojiRef, file);
+        // Save to database
+        const emojisRef = ref(database, 'customEmojis');
+        await push(emojisRef, {
+            name: file.name,
+            data: base64Data,
+            timestamp: Date.now()
+        });
         
         // Reset upload area
         uploadArea.innerHTML = `
@@ -1306,10 +1320,10 @@ async function uploadCustomEmoji(file) {
     }
 }
 
-async function deleteCustomEmoji(path) {
+async function deleteCustomEmoji(emojiId) {
     try {
-        const emojiRef = storageRef(storage, path);
-        await deleteObject(emojiRef);
+        const emojiRef = ref(database, `customEmojis/${emojiId}`);
+        await set(emojiRef, null);
         await loadCustomEmojis();
     } catch (error) {
         console.error('Error deleting emoji:', error);
