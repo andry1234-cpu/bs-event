@@ -86,20 +86,26 @@ function checkURLParameters() {
     const urlParams = new URLSearchParams(window.location.search);
     const action = urlParams.get('action');
     
+    console.log('Checking URL parameters, action:', action);
+    
     if (action) {
         // Wait for authentication before opening panels
         const checkAuth = setInterval(() => {
             if (isAuthenticated) {
                 clearInterval(checkAuth);
+                console.log('Authenticated, opening panel for action:', action);
                 setTimeout(() => {
                     switch(action) {
                         case 'test':
+                            console.log('Opening test panel');
                             toggleTestPanel();
                             break;
                         case 'admin':
+                            console.log('Opening admin panel');
                             toggleAdminPanel();
                             break;
                         case 'poll':
+                            console.log('Opening poll panel');
                             togglePollPanel();
                             break;
                     }
