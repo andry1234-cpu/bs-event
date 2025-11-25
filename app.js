@@ -785,6 +785,11 @@ async function processAndUploadImage(fileOrBlob) {
         
         uploadingMsg.remove();
         
+        // Scroll to bottom after photo upload
+        setTimeout(() => {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 200);
+        
     } catch (error) {
         console.error('Error uploading photo:', error);
         alert('Errore durante il caricamento della foto');
