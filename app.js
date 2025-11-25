@@ -26,7 +26,7 @@ const CONFIG = {
     maxMessages: 100,
     reactionDuration: 3000,
     // Domain whitelist for authentication (empty array = allow all)
-    allowedDomains: ['bendingspoons.com', 'dedgroup.com'] // Add more domains like: ['bendingspoons.com', 'gmail.com']
+    allowedDomains: ['bendingspoons.com', 'dedgroup.com', 'urlo.events'] // Add more domains like: ['bendingspoons.com', 'gmail.com']
 };
 
 // State Management
