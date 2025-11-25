@@ -2,6 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, onChildAdded, onDisconnect, set, serverTimestamp, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCmEbIjFLlLxVgLUqwsOLCsB0aoMWF6PJQ",
@@ -18,6 +19,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
 // Configurazione
@@ -34,6 +36,7 @@ let messages = [];
 let onlineUsers = 1;
 let isAuthenticated = false;
 let userColors = {}; // Store user colors
+let customEmojis = []; // Store custom emoji URLs
 
 // DOM Elements (will be initialized after DOM is ready)
 let chatMessages, chatInput, sendBtn, reactionsOverlay, reactionButtons, usernameDisplay, onlineUsersDisplay, videoIframe;
@@ -156,8 +159,31 @@ function initializeFirebase() {
     // Listen to reactions
     listenToReactions();
     
+    // Load custom emojis
+    loadCustomEmojisQuiet();
+    
     addSystemMessage('Connesso! La chat è sincronizzata.');
 }
+
+// Load custom emojis without UI update (for initial load)
+async function loadCustomEmojisQuiet() {
+    try {
+        const emojisRef = storageRef(storage, 'custom-emojis/');
+        const result = await listAll(emojisRef);
+        
+        customEmojis = [];
+        
+        for (const item of result.items) {
+            const url = await getDownloadURL(item);
+            customEmojis.push({ name: item.name, url: url, path: item.fullPath });
+        }
+        
+        updateReactionsBar();
+    } catch (error) {
+        console.error('Error loading custom emojis:', error);
+    }
+}
+
 
 // Setup Event Listeners
 function setupEventListeners() {
@@ -627,7 +653,16 @@ function triggerReaction(emoji) {
 function createFloatingReaction(emoji) {
     const reaction = document.createElement('div');
     reaction.className = 'floating-reaction';
-    reaction.textContent = emoji;
+    
+    // Check if it's a custom emoji (URL)
+    if (emoji.startsWith('http')) {
+        const img = document.createElement('img');
+        img.src = emoji;
+        img.className = 'custom-emoji-float';
+        reaction.appendChild(img);
+    } else {
+        reaction.textContent = emoji;
+    }
     
     // Random horizontal position
     const randomX = Math.random() * 80 + 10; // 10% to 90%
@@ -674,6 +709,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         if (e.key === 't' || e.key === 'T') {
             toggleTestPanel();
+        }
+        // Admin panel: Press 'Shift+A' to toggle admin panel
+        if (e.shiftKey && (e.key === 'a' || e.key === 'A')) {
+            toggleAdminPanel();
         }
     });
 });
@@ -766,6 +805,227 @@ function addTestMessages() {
             };
             addMessageToUI(testMessage);
         }, index * 200);
+    });
+}
+
+// Admin Panel for Custom Emojis
+function toggleAdminPanel() {
+    let panel = document.getElementById('admin-panel');
+    
+    if (panel) {
+        panel.remove();
+        return;
+    }
+    
+    if (!isAuthenticated) {
+        alert('Devi effettuare il login per accedere al pannello admin');
+        return;
+    }
+    
+    panel = document.createElement('div');
+    panel.id = 'admin-panel';
+    panel.innerHTML = `
+        <div class="admin-modal">
+            <div class="admin-header">
+                <h3>🔧 Admin - Custom Emojis</h3>
+                <button id="close-admin" class="close-btn">✕</button>
+            </div>
+            
+            <div class="admin-content">
+                <div class="admin-section">
+                    <h4>Upload Custom Emoji</h4>
+                    <p class="admin-hint">PNG/SVG • Max 1MB • Recommended: 512x512px or higher</p>
+                    
+                    <div class="upload-area" id="upload-area">
+                        <input type="file" id="emoji-file-input" accept=".png,.svg" style="display: none;">
+                        <div class="upload-placeholder">
+                            <span class="upload-icon">📁</span>
+                            <p>Drag & drop or click to upload</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="admin-section">
+                    <h4>Current Custom Emojis</h4>
+                    <div id="custom-emojis-list" class="emoji-grid">
+                        <p class="loading-text">Caricamento...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(panel);
+    
+    // Load custom emojis
+    loadCustomEmojis();
+    
+    // Close button
+    panel.querySelector('#close-admin').addEventListener('click', () => {
+        panel.remove();
+    });
+    
+    // File input
+    const fileInput = panel.querySelector('#emoji-file-input');
+    const uploadArea = panel.querySelector('#upload-area');
+    
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    // Drag & drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('drag-over');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) uploadCustomEmoji(file);
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) uploadCustomEmoji(file);
+    });
+}
+
+async function loadCustomEmojis() {
+    try {
+        const emojisRef = storageRef(storage, 'custom-emojis/');
+        const result = await listAll(emojisRef);
+        
+        customEmojis = [];
+        const emojisList = document.getElementById('custom-emojis-list');
+        
+        if (result.items.length === 0) {
+            emojisList.innerHTML = '<p class="empty-text">Nessuna emoji custom caricata</p>';
+            updateReactionsBar();
+            return;
+        }
+        
+        emojisList.innerHTML = '';
+        
+        for (const item of result.items) {
+            const url = await getDownloadURL(item);
+            customEmojis.push({ name: item.name, url: url, path: item.fullPath });
+            
+            const emojiDiv = document.createElement('div');
+            emojiDiv.className = 'emoji-item';
+            emojiDiv.innerHTML = `
+                <img src="${url}" alt="${item.name}" class="emoji-preview">
+                <span class="emoji-name">${item.name}</span>
+                <button class="delete-emoji-btn" data-path="${item.fullPath}">🗑️</button>
+            `;
+            
+            emojiDiv.querySelector('.delete-emoji-btn').addEventListener('click', async (e) => {
+                if (confirm('Eliminare questa emoji?')) {
+                    await deleteCustomEmoji(e.target.dataset.path);
+                }
+            });
+            
+            emojisList.appendChild(emojiDiv);
+        }
+        
+        updateReactionsBar();
+        
+    } catch (error) {
+        console.error('Error loading custom emojis:', error);
+        document.getElementById('custom-emojis-list').innerHTML = '<p class="error-text">Errore nel caricamento</p>';
+    }
+}
+
+async function uploadCustomEmoji(file) {
+    // Validate file
+    if (!file.type.match('image/png') && !file.type.match('image/svg+xml')) {
+        alert('Solo file PNG o SVG sono supportati');
+        return;
+    }
+    
+    if (file.size > 1024 * 1024) { // 1MB
+        alert('File troppo grande. Max 1MB');
+        return;
+    }
+    
+    try {
+        // Show uploading state
+        const uploadArea = document.getElementById('upload-area');
+        uploadArea.innerHTML = '<p class="uploading-text">Caricamento... ⏳</p>';
+        
+        // Upload to Firebase Storage
+        const timestamp = Date.now();
+        const fileName = `${timestamp}_${file.name}`;
+        const emojiRef = storageRef(storage, `custom-emojis/${fileName}`);
+        
+        await uploadBytes(emojiRef, file);
+        
+        // Reset upload area
+        uploadArea.innerHTML = `
+            <div class="upload-placeholder">
+                <span class="upload-icon">📁</span>
+                <p>Drag & drop or click to upload</p>
+            </div>
+        `;
+        
+        // Reload list
+        await loadCustomEmojis();
+        
+    } catch (error) {
+        console.error('Error uploading emoji:', error);
+        alert('Errore durante l\'upload: ' + error.message);
+    }
+}
+
+async function deleteCustomEmoji(path) {
+    try {
+        const emojiRef = storageRef(storage, path);
+        await deleteObject(emojiRef);
+        await loadCustomEmojis();
+    } catch (error) {
+        console.error('Error deleting emoji:', error);
+        alert('Errore durante l\'eliminazione');
+    }
+}
+
+function updateReactionsBar() {
+    // Update the reactions bar to include custom emojis
+    const reactionsBar = document.querySelector('.reactions');
+    if (!reactionsBar) return;
+    
+    // Keep default emoji buttons
+    const defaultButtons = Array.from(reactionsBar.querySelectorAll('.reaction-btn')).slice(0, 5);
+    
+    // Clear and re-add
+    reactionsBar.innerHTML = '';
+    defaultButtons.forEach(btn => reactionsBar.appendChild(btn));
+    
+    // Add custom emoji buttons
+    customEmojis.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.className = 'reaction-btn custom-emoji-btn';
+        btn.innerHTML = `<img src="${emoji.url}" alt="${emoji.name}" class="custom-emoji-icon">`;
+        btn.onclick = () => triggerCustomReaction(emoji.url);
+        reactionsBar.appendChild(btn);
+    });
+}
+
+function triggerCustomReaction(imageUrl) {
+    if (!isAuthenticated) {
+        alert('Devi effettuare il login per inviare reactions');
+        return;
+    }
+    
+    // Add to Firebase - using image URL as emoji identifier
+    const reactionsRef = ref(database, 'reactions');
+    push(reactionsRef, {
+        emoji: imageUrl, // Store the URL
+        isCustom: true,
+        userId: currentUserId,
+        timestamp: Date.now()
     });
 }
 

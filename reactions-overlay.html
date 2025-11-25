@@ -219,7 +219,17 @@
                 reaction.classList.add('variant-2');
             }
             
-            reaction.textContent = emoji;
+            // Check if it's a custom emoji (URL)
+            if (emoji.startsWith('http')) {
+                const img = document.createElement('img');
+                img.src = emoji;
+                img.style.width = '80px';
+                img.style.height = '80px';
+                img.style.objectFit = 'contain';
+                reaction.appendChild(img);
+            } else {
+                reaction.textContent = emoji;
+            }
             
             // Posizione X casuale (evitando i bordi)
             const randomX = 100 + Math.random() * (1920 - 200);
@@ -228,7 +238,12 @@
             
             // Piccola variazione nella dimensione
             const scale = 0.8 + Math.random() * 0.4;
-            reaction.style.fontSize = (80 * scale) + 'px';
+            if (emoji.startsWith('http')) {
+                reaction.querySelector('img').style.width = (80 * scale) + 'px';
+                reaction.querySelector('img').style.height = (80 * scale) + 'px';
+            } else {
+                reaction.style.fontSize = (80 * scale) + 'px';
+            }
             
             reactionsContainer.appendChild(reaction);
             
