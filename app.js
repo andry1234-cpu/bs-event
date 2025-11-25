@@ -3,6 +3,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getDatabase, ref, push, onValue, onChildAdded, onDisconnect, set, serverTimestamp, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+console.log('🔥 APP.JS LOADED - Version 20251125-2108');
+
 const firebaseConfig = {
   apiKey: "AIzaSyCmEbIjFLlLxVgLUqwsOLCsB0aoMWF6PJQ",
   authDomain: "bendingspoons-eventdec25.firebaseapp.com",
@@ -229,7 +231,12 @@ async function loadCustomEmojisQuiet() {
                 reactionSlots = ['❤️', '👏', '🔥', '😂', '👍'];
                 console.log('Using default reaction slots');
             }
-            updateReactionsBar();
+            // Wait for DOM to be ready before updating UI
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => updateReactionsBar(), { once: true });
+            } else {
+                updateReactionsBar();
+            }
         });
     } catch (error) {
         console.error('Error loading custom emojis:', error);
@@ -1380,6 +1387,18 @@ async function loadCustomEmojis() {
         customEmojis = [];
         const emojisList = document.getElementById('custom-emojis-list');
         
+        // If panel is closed, just update the array and return
+        if (!emojisList) {
+            if (snapshot.exists()) {
+                const emojisData = snapshot.val();
+                Object.entries(emojisData).forEach(([key, emoji]) => {
+                    customEmojis.push({ id: key, name: emoji.name, url: emoji.data });
+                });
+            }
+            updateReactionsBar();
+            return;
+        }
+        
         if (!snapshot.exists()) {
             emojisList.innerHTML = '<p class="empty-text">Nessuna emoji custom caricata</p>';
             updateReactionsBar();
@@ -1413,7 +1432,10 @@ async function loadCustomEmojis() {
         
     } catch (error) {
         console.error('Error loading custom emojis:', error);
-        document.getElementById('custom-emojis-list').innerHTML = '<p class="error-text">Errore nel caricamento</p>';
+        const emojisList = document.getElementById('custom-emojis-list');
+        if (emojisList) {
+            emojisList.innerHTML = '<p class="error-text">Errore nel caricamento</p>';
+        }
     }
 }
 
@@ -1635,9 +1657,11 @@ async function assignEmojiToSlot(emoji) {
 
 function updateReactionsBar() {
     // Update the reactions bar to use configured slots
-    const reactionsBar = document.querySelector('.reactions');
+    console.log('updateReactionsBar called, readyState:', document.readyState);
+    const reactionsBar = document.querySelector('.reactions-bar');
+    console.log('reactionsBar element:', reactionsBar);
     if (!reactionsBar) {
-        console.log('Reactions bar not found');
+        console.warn('Reactions bar not found - DOM not ready yet');
         return;
     }
     
