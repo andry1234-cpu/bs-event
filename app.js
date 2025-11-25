@@ -696,7 +696,7 @@ function formatTime(timestamp) {
 // Photo Upload Functions
 function closePhotoMenu(menu) {
     menu.classList.add('closing');
-    setTimeout(() => menu.remove(), 300);
+    setTimeout(() => menu.remove(), 200);
 }
 
 function showPhotoMenu() {

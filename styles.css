@@ -1283,7 +1283,6 @@ html {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
     background: rgba(10, 10, 20, 0.98);
     border: 1px solid rgba(139, 92, 246, 0.4);
     border-radius: 16px;
@@ -1295,36 +1294,34 @@ html {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
     min-width: 250px;
     backdrop-filter: blur(10px);
+    animation: slideInBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    transform: translate(-50%, -50%) scale(0.8);
     opacity: 0;
-    animation: slideInBounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
 }
 
 @keyframes slideInBounce {
     0% {
         opacity: 0;
-        transform: translate(-50%, -50%) scale(0.7) translateY(20px);
+        transform: translate(-50%, -50%) scale(0.8);
     }
     100% {
         opacity: 1;
-        transform: translate(-50%, -50%) scale(1) translateY(0);
+        transform: translate(-50%, -50%) scale(1);
     }
 }
 
 .photo-menu.closing {
-    animation: slideOutBounce 0.3s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+    animation: slideOutBounce 0.2s ease-out forwards;
 }
 
 @keyframes slideOutBounce {
     0% {
         opacity: 1;
-@keyframes slideOutBounce {
-    0% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1) translateY(0);
+        transform: translate(-50%, -50%) scale(1);
     }
     100% {
         opacity: 0;
-        transform: translate(-50%, -50%) scale(0.7) translateY(20px);
+        transform: translate(-50%, -50%) scale(0.9);
     }
 }
 
