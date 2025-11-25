@@ -1508,6 +1508,7 @@ async function votePoll(pollMessage, optionIndex) {
 }
 
 function togglePollPanel() {
+    console.log('togglePollPanel called, isAuthenticated:', isAuthenticated);
     let panel = document.getElementById('poll-panel');
     
     if (panel) {
@@ -1522,6 +1523,7 @@ function togglePollPanel() {
     
     panel = document.createElement('div');
     panel.id = 'poll-panel';
+    console.log('Creating poll panel element');
     panel.innerHTML = `
         <div class="admin-modal">
             <div class="admin-header">
