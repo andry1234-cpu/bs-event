@@ -2,3 +2,6 @@ node_modules/
 .DS_Store
 *.log
 .env
+
+# Admin tools - keep local only
+clear-database.html
