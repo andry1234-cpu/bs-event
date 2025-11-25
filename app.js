@@ -223,9 +223,11 @@ async function loadCustomEmojisQuiet() {
         onValue(slotsRef, (snapshot) => {
             if (snapshot.exists()) {
                 reactionSlots = snapshot.val();
+                console.log('Loaded reaction slots from Firebase:', reactionSlots);
             } else {
                 // Default slots
                 reactionSlots = ['❤️', '👏', '🔥', '😂', '👍'];
+                console.log('Using default reaction slots');
             }
             updateReactionsBar();
         });
@@ -1634,7 +1636,12 @@ async function assignEmojiToSlot(emoji) {
 function updateReactionsBar() {
     // Update the reactions bar to use configured slots
     const reactionsBar = document.querySelector('.reactions');
-    if (!reactionsBar) return;
+    if (!reactionsBar) {
+        console.log('Reactions bar not found');
+        return;
+    }
+    
+    console.log('Updating reactions bar with slots:', reactionSlots);
     
     // Clear all buttons
     reactionsBar.innerHTML = '';
