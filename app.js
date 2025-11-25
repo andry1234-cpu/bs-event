@@ -3,8 +3,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getDatabase, ref, push, onValue, onChildAdded, onDisconnect, set, serverTimestamp, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-console.log('🔥 APP.JS LOADED - Version 20251125-2108');
-
 const firebaseConfig = {
   apiKey: "AIzaSyCmEbIjFLlLxVgLUqwsOLCsB0aoMWF6PJQ",
   authDomain: "bendingspoons-eventdec25.firebaseapp.com",
@@ -225,11 +223,9 @@ async function loadCustomEmojisQuiet() {
         onValue(slotsRef, (snapshot) => {
             if (snapshot.exists()) {
                 reactionSlots = snapshot.val();
-                console.log('Loaded reaction slots from Firebase:', reactionSlots);
             } else {
                 // Default slots
                 reactionSlots = ['❤️', '👏', '🔥', '😂', '👍'];
-                console.log('Using default reaction slots');
             }
             // Wait for DOM to be ready before updating UI
             if (document.readyState === 'loading') {
@@ -1657,15 +1653,10 @@ async function assignEmojiToSlot(emoji) {
 
 function updateReactionsBar() {
     // Update the reactions bar to use configured slots
-    console.log('updateReactionsBar called, readyState:', document.readyState);
     const reactionsBar = document.querySelector('.reactions-bar');
-    console.log('reactionsBar element:', reactionsBar);
     if (!reactionsBar) {
-        console.warn('Reactions bar not found - DOM not ready yet');
         return;
     }
-    
-    console.log('Updating reactions bar with slots:', reactionSlots);
     
     // Clear all buttons
     reactionsBar.innerHTML = '';

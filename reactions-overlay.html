@@ -223,8 +223,8 @@
                 reaction.classList.add('variant-2');
             }
             
-            // Check if it's a custom emoji (URL)
-            if (emoji.startsWith('http')) {
+            // Check if it's a custom emoji (URL or base64)
+            if (emoji.startsWith('http') || emoji.startsWith('data:')) {
                 const img = document.createElement('img');
                 img.src = emoji;
                 img.style.width = '80px';
@@ -242,7 +242,7 @@
             
             // Piccola variazione nella dimensione
             const scale = 0.8 + Math.random() * 0.4;
-            if (emoji.startsWith('http')) {
+            if (emoji.startsWith('http') || emoji.startsWith('data:')) {
                 reaction.querySelector('img').style.width = (80 * scale) + 'px';
                 reaction.querySelector('img').style.height = (80 * scale) + 'px';
             } else {
