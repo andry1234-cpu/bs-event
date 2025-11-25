@@ -481,6 +481,11 @@ function listenToMessages() {
             const message = childSnapshot.val();
             addMessageToUI(message);
         });
+        
+        // Scroll to bottom after loading all messages
+        setTimeout(() => {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 100);
     });
 }
 
