@@ -37,6 +37,7 @@ let onlineUsers = 1;
 let isAuthenticated = false;
 let userColors = {}; // Store user colors
 let customEmojis = []; // Store custom emoji URLs
+let reactionSlots = ['❤️', '👏', '🔥', '😂', '👍']; // Default emoji slots (configurable)
 
 // DOM Elements (will be initialized after DOM is ready)
 let chatMessages, chatInput, sendBtn, reactionsOverlay, reactionButtons, usernameDisplay, onlineUsersDisplay, videoIframe;
@@ -198,6 +199,7 @@ function initializeFirebase() {
 // Load custom emojis from database (base64)
 async function loadCustomEmojisQuiet() {
     try {
+        // Load custom emojis
         const emojisRef = ref(database, 'customEmojis');
         onValue(emojisRef, (snapshot) => {
             customEmojis = [];
@@ -213,6 +215,18 @@ async function loadCustomEmojisQuiet() {
                 });
             }
             
+            updateReactionsBar();
+        });
+        
+        // Load configured reaction slots
+        const slotsRef = ref(database, 'reactionSlots');
+        onValue(slotsRef, (snapshot) => {
+            if (snapshot.exists()) {
+                reactionSlots = snapshot.val();
+            } else {
+                // Default slots
+                reactionSlots = ['❤️', '👏', '🔥', '😂', '👍'];
+            }
             updateReactionsBar();
         });
     } catch (error) {
@@ -1280,11 +1294,23 @@ function toggleAdminPanel() {
     panel.innerHTML = `
         <div class="admin-modal">
             <div class="admin-header">
-                <h3>🔧 Admin - Custom Emojis</h3>
+                <h3>🔧 Admin - Reaction Slots</h3>
                 <button id="close-admin" class="close-btn">✕</button>
             </div>
             
             <div class="admin-content">
+                <div class="admin-section">
+                    <h4>Configure Reaction Buttons (5 slots)</h4>
+                    <p class="admin-hint">Click on a slot to assign an emoji</p>
+                    <div id="slots-config" class="slots-grid"></div>
+                </div>
+                
+                <div class="admin-section">
+                    <h4>Available Emojis</h4>
+                    <p class="admin-hint">Default + Custom uploaded emojis</p>
+                    <div id="available-emojis" class="emoji-grid"></div>
+                </div>
+                
                 <div class="admin-section">
                     <h4>Upload Custom Emoji</h4>
                     <p class="admin-hint">PNG/SVG • Max 1MB • Recommended: 512x512px or higher</p>
@@ -1297,21 +1323,16 @@ function toggleAdminPanel() {
                         </div>
                     </div>
                 </div>
-                
-                <div class="admin-section">
-                    <h4>Current Custom Emojis</h4>
-                    <div id="custom-emojis-list" class="emoji-grid">
-                        <p class="loading-text">Caricamento...</p>
-                    </div>
-                </div>
             </div>
         </div>
     `;
     
     document.body.appendChild(panel);
     
-    // Load custom emojis
+    // Load custom emojis and render interface
     loadCustomEmojis();
+    renderSlotsConfig();
+    renderAvailableEmojis();
     
     // Close button
     panel.querySelector('#close-admin').addEventListener('click', () => {
@@ -1454,24 +1475,186 @@ async function deleteCustomEmoji(emojiId) {
     }
 }
 
+// Render slots configuration interface
+function renderSlotsConfig() {
+    const slotsContainer = document.getElementById('slots-config');
+    if (!slotsContainer) return;
+    
+    slotsContainer.innerHTML = '';
+    slotsContainer.style.cssText = 'display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 1rem;';
+    
+    reactionSlots.forEach((emoji, index) => {
+        const slotDiv = document.createElement('div');
+        slotDiv.className = 'slot-config';
+        slotDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 2px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.2s;';
+        
+        const isCustom = emoji.startsWith('http') || emoji.startsWith('data:');
+        
+        slotDiv.innerHTML = `
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Slot ${index + 1}</div>
+            <div style="font-size: 3rem; margin: 0.5rem 0;">
+                ${isCustom ? `<img src="${emoji}" style="width: 48px; height: 48px; object-fit: contain;">` : emoji}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Click to change</div>
+        `;
+        
+        slotDiv.addEventListener('click', () => selectSlot(index));
+        slotDiv.addEventListener('mouseenter', () => {
+            slotDiv.style.borderColor = '#8B5CF6';
+            slotDiv.style.background = 'rgba(139, 92, 246, 0.2)';
+        });
+        slotDiv.addEventListener('mouseleave', () => {
+            slotDiv.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+            slotDiv.style.background = 'rgba(139, 92, 246, 0.1)';
+        });
+        
+        slotsContainer.appendChild(slotDiv);
+    });
+}
+
+// Render available emojis for selection
+function renderAvailableEmojis() {
+    const container = document.getElementById('available-emojis');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Default emojis
+    const defaultEmojis = ['❤️', '👏', '🔥', '😂', '👍', '🎉', '💜', '✨', '🚀', '💪'];
+    
+    defaultEmojis.forEach(emoji => {
+        const emojiDiv = document.createElement('div');
+        emojiDiv.className = 'emoji-item';
+        emojiDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s;';
+        emojiDiv.innerHTML = `<div style="font-size: 2.5rem;">${emoji}</div>`;
+        emojiDiv.onclick = () => assignEmojiToSlot(emoji);
+        emojiDiv.addEventListener('mouseenter', () => {
+            emojiDiv.style.borderColor = '#8B5CF6';
+            emojiDiv.style.background = 'rgba(139, 92, 246, 0.2)';
+        });
+        emojiDiv.addEventListener('mouseleave', () => {
+            emojiDiv.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+            emojiDiv.style.background = 'rgba(139, 92, 246, 0.1)';
+        });
+        container.appendChild(emojiDiv);
+    });
+    
+    // Custom emojis
+    customEmojis.forEach(emoji => {
+        const emojiDiv = document.createElement('div');
+        emojiDiv.className = 'emoji-item';
+        emojiDiv.style.cssText = 'background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s; position: relative;';
+        emojiDiv.innerHTML = `
+            <img src="${emoji.url}" style="width: 48px; height: 48px; object-fit: contain;">
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">${emoji.name}</div>
+            <button class="delete-emoji-btn" data-id="${emoji.id}" style="position: absolute; top: 4px; right: 4px; background: rgba(220, 38, 38, 0.8); border: none; border-radius: 4px; color: white; width: 20px; height: 20px; cursor: pointer; font-size: 0.7rem;">✕</button>
+        `;
+        
+        emojiDiv.querySelector('img').onclick = () => assignEmojiToSlot(emoji.url);
+        emojiDiv.querySelector('.delete-emoji-btn').onclick = async (e) => {
+            e.stopPropagation();
+            if (confirm(`Eliminare "${emoji.name}"?`)) {
+                await deleteCustomEmoji(emoji.id);
+                renderAvailableEmojis();
+            }
+        };
+        
+        emojiDiv.addEventListener('mouseenter', () => {
+            emojiDiv.style.borderColor = '#8B5CF6';
+            emojiDiv.style.background = 'rgba(139, 92, 246, 0.2)';
+        });
+        emojiDiv.addEventListener('mouseleave', () => {
+            emojiDiv.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+            emojiDiv.style.background = 'rgba(139, 92, 246, 0.1)';
+        });
+        
+        container.appendChild(emojiDiv);
+    });
+}
+
+let selectedSlotIndex = null;
+
+function selectSlot(index) {
+    selectedSlotIndex = index;
+    
+    // Visual feedback
+    const slots = document.querySelectorAll('.slot-config');
+    slots.forEach((slot, i) => {
+        if (i === index) {
+            slot.style.borderColor = '#10b981';
+            slot.style.background = 'rgba(16, 185, 129, 0.2)';
+        } else {
+            slot.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+            slot.style.background = 'rgba(139, 92, 246, 0.1)';
+        }
+    });
+    
+    // Show message
+    const container = document.getElementById('available-emojis');
+    const existingMsg = document.querySelector('.selection-message');
+    if (existingMsg) existingMsg.remove();
+    
+    const msg = document.createElement('div');
+    msg.className = 'selection-message';
+    msg.style.cssText = 'grid-column: 1 / -1; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; border-radius: 8px; padding: 0.75rem; text-align: center; color: #10b981; font-weight: 600;';
+    msg.textContent = `Slot ${index + 1} selezionato - Clicca su un'emoji per assegnarla`;
+    container.insertBefore(msg, container.firstChild);
+}
+
+async function assignEmojiToSlot(emoji) {
+    if (selectedSlotIndex === null) {
+        alert('Seleziona prima uno slot cliccando su di esso');
+        return;
+    }
+    
+    // Update local state
+    reactionSlots[selectedSlotIndex] = emoji;
+    
+    // Save to Firebase
+    try {
+        const slotsRef = ref(database, 'reactionSlots');
+        await set(slotsRef, reactionSlots);
+        
+        // Update UI
+        renderSlotsConfig();
+        updateReactionsBar();
+        
+        // Clear selection
+        selectedSlotIndex = null;
+        const msg = document.querySelector('.selection-message');
+        if (msg) msg.remove();
+        
+    } catch (error) {
+        console.error('Error saving slot configuration:', error);
+        alert('Errore nel salvataggio');
+    }
+}
+
+
 function updateReactionsBar() {
-    // Update the reactions bar to include custom emojis
+    // Update the reactions bar to use configured slots
     const reactionsBar = document.querySelector('.reactions');
     if (!reactionsBar) return;
     
-    // Keep default emoji buttons
-    const defaultButtons = Array.from(reactionsBar.querySelectorAll('.reaction-btn')).slice(0, 5);
-    
-    // Clear and re-add
+    // Clear all buttons
     reactionsBar.innerHTML = '';
-    defaultButtons.forEach(btn => reactionsBar.appendChild(btn));
     
-    // Add custom emoji buttons
-    customEmojis.forEach(emoji => {
+    // Create 5 buttons from configured slots
+    reactionSlots.forEach((emoji, index) => {
         const btn = document.createElement('button');
-        btn.className = 'reaction-btn custom-emoji-btn';
-        btn.innerHTML = `<img src="${emoji.url}" alt="${emoji.name}" class="custom-emoji-icon">`;
-        btn.onclick = () => triggerCustomReaction(emoji.url);
+        btn.className = 'reaction-btn';
+        btn.dataset.reaction = emoji;
+        btn.dataset.slotIndex = index;
+        
+        // Check if it's a custom emoji (URL) or standard emoji
+        if (emoji.startsWith('http') || emoji.startsWith('data:')) {
+            btn.innerHTML = `<img src="${emoji}" alt="Emoji ${index + 1}" class="custom-emoji-icon">`;
+            btn.onclick = () => triggerCustomReaction(emoji);
+        } else {
+            btn.textContent = emoji;
+            btn.onclick = () => triggerReaction(emoji);
+        }
+        
         reactionsBar.appendChild(btn);
     });
 }
