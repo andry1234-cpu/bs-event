@@ -24,7 +24,9 @@ const googleProvider = new GoogleAuthProvider();
 const CONFIG = {
     castrPlayerUrl: '', // Inserire l'URL del player CASTR
     maxMessages: 100,
-    reactionDuration: 3000
+    reactionDuration: 3000,
+    // Domain whitelist for authentication (empty array = allow all)
+    allowedDomains: ['bendingspoons.com'] // Add more domains like: ['bendingspoons.com', 'gmail.com']
 };
 
 // State Management
@@ -80,7 +82,18 @@ function setupAuth() {
     
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // User is signed in
+            // Check if user's domain is allowed
+            const userEmail = user.email;
+            const emailDomain = userEmail.split('@')[1];
+            
+            // If allowedDomains is configured, check domain
+            if (CONFIG.allowedDomains.length > 0 && !CONFIG.allowedDomains.includes(emailDomain)) {
+                alert(`❌ Accesso negato!\n\nSolo account @${CONFIG.allowedDomains.join(', @')} possono accedere.\n\nIl tuo dominio: @${emailDomain}`);
+                signOut(auth);
+                return;
+            }
+            
+            // User is signed in and domain is allowed
             isAuthenticated = true;
             currentUser = user.displayName || user.email;
             currentUserId = user.uid;
