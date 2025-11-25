@@ -356,31 +356,31 @@
                     <div class="backend-section">
                         <h2 class="section-title">Quick Actions</h2>
                         <div class="actions-grid">
-                            <button class="action-btn" onclick="window.location.href='index.html'; setTimeout(() => { const event = new KeyboardEvent('keydown', { key: 'T', shiftKey: true }); document.dispatchEvent(event); }, 500);">
+                            <button class="action-btn" onclick="window.open('index.html?action=test', '_blank')">
                                 <div class="icon">🧪</div>
                                 <div class="title">Test Reaction</div>
                                 <div class="description">Invia una reaction di test per verificare il sistema</div>
-                                <div class="shortcut">Shortcut: Shift + T</div>
+                                <div class="shortcut">Apri in nuova finestra</div>
                             </button>
 
-                            <button class="action-btn" onclick="window.location.href='index.html'; setTimeout(() => { const event = new KeyboardEvent('keydown', { key: 'A', shiftKey: true }); document.dispatchEvent(event); }, 500);">
+                            <button class="action-btn" onclick="window.open('index.html?action=admin', '_blank')">
                                 <div class="icon">😊</div>
                                 <div class="title">Admin Reactions</div>
                                 <div class="description">Configura slot reactions e carica emoji custom</div>
-                                <div class="shortcut">Shortcut: Shift + A</div>
+                                <div class="shortcut">Apri in nuova finestra</div>
                             </button>
 
-                            <button class="action-btn" onclick="window.location.href='index.html'; setTimeout(() => { const event = new KeyboardEvent('keydown', { key: 'P', shiftKey: true }); document.dispatchEvent(event); }, 500);">
+                            <button class="action-btn" onclick="window.open('index.html?action=poll', '_blank')">
                                 <div class="icon">📊</div>
                                 <div class="title">Create Poll</div>
                                 <div class="description">Crea un nuovo sondaggio per gli utenti</div>
-                                <div class="shortcut">Shortcut: Shift + P</div>
+                                <div class="shortcut">Apri in nuova finestra</div>
                             </button>
 
-                            <button class="action-btn" onclick="window.location.href='index.html'">
+                            <button class="action-btn" onclick="window.open('index.html', '_blank')">
                                 <div class="icon">🏠</div>
                                 <div class="title">Main Event Page</div>
-                                <div class="description">Torna alla pagina principale dell'evento</div>
+                                <div class="description">Apri la pagina principale dell'evento</div>
                             </button>
                         </div>
                     </div>

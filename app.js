@@ -60,6 +60,9 @@ function init() {
     setupAuth();
     // Note: initializeMillicast() is now called after authentication
     
+    // Check for URL parameters to auto-open panels
+    checkURLParameters();
+    
     // Hide loader and show content after layout is fully stable
     // Wait longer to ensure WebRTC negotiation is complete
     setTimeout(() => {
@@ -76,6 +79,36 @@ function init() {
             }, 300);
         }
     }, 2000);
+}
+
+// Check URL parameters for auto-opening panels
+function checkURLParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    
+    if (action) {
+        // Wait for authentication before opening panels
+        const checkAuth = setInterval(() => {
+            if (isAuthenticated) {
+                clearInterval(checkAuth);
+                setTimeout(() => {
+                    switch(action) {
+                        case 'test':
+                            toggleTestPanel();
+                            break;
+                        case 'admin':
+                            toggleAdminPanel();
+                            break;
+                        case 'poll':
+                            togglePollPanel();
+                            break;
+                    }
+                    // Remove parameter from URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }, 1000);
+            }
+        }, 100);
+    }
 }
 
 // Setup Authentication
