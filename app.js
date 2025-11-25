@@ -1221,6 +1221,11 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             togglePollPanel();
         }
+        // Backend panel: Press 'Shift+B' to open backend
+        if (e.shiftKey && (e.key === 'b' || e.key === 'B')) {
+            e.preventDefault();
+            window.open('backend.html', '_blank');
+        }
     });
 });
 
