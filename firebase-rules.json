@@ -1,14 +1,18 @@
 {
   "rules": {
-    ".read": true,
-    ".write": true,
     "messages": {
+      ".read": "auth != null",
+      ".write": "auth != null",
       ".indexOn": ["timestamp"]
     },
     "reactions": {
+      ".read": "auth != null",
+      ".write": "auth != null",
       ".indexOn": ["timestamp"]
     },
     "presence": {
+      ".read": "auth != null",
+      ".write": "auth != null",
       ".indexOn": ["lastSeen"]
     }
   }
