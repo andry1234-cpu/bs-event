@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Backend - Bending Spoons</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0f14 0%, #1a1a24 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .backend-container {
+            max-width: 1200px;
+            width: 100%;
+            background: linear-gradient(135deg, rgba(15, 15, 20, 0.95) 0%, rgba(20, 20, 30, 0.95) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .backend-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .backend-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 0.5rem 0;
+            font-weight: 700;
+        }
+
+        .backend-header .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .backend-header .admin-info {
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            display: inline-block;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .backend-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .backend-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            color: #8B5CF6;
+            margin: 0 0 1.5rem 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
+            border-radius: 2px;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: var(--text-primary);
+            padding: 1.5rem;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-family: inherit;
+            font-size: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(139, 92, 246, 0.3);
+            border-color: #8B5CF6;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+        }
+
+        .action-btn .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-btn .title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .action-btn .description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .action-btn .shortcut {
+            font-size: 0.75rem;
+            color: #8B5CF6;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        .overlay-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .overlay-card {
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .overlay-card:hover {
+            border-color: #8B5CF6;
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .overlay-card .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 0.5rem 0;
+        }
+
+        .overlay-card .card-description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .overlay-card .link-input {
+            background: rgba(15, 15, 20, 0.8);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            width: 100%;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 0.75rem;
+        }
+
+        .overlay-card .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .overlay-card .btn {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .overlay-card .btn:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: #8B5CF6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .access-denied {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .access-denied h2 {
+            color: #ef4444;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .access-denied p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #ef4444;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background: rgba(220, 38, 38, 0.2);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div id="content"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCmEbIjFLlLxVgLUqwsOLCsB0aoMWF6PJQ",
+            authDomain: "bendingspoons-eventdec25.firebaseapp.com",
+            databaseURL: "https://bendingspoons-eventdec25-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "bendingspoons-eventdec25",
+            storageBucket: "bendingspoons-eventdec25.firebasestorage.app",
+            messagingSenderId: "26050473198",
+            appId: "1:26050473198:web:52d2e5d2bb912eaa2ad7ff",
+            measurementId: "G-6C7XXL2XSN"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+
+        const ADMIN_EMAILS = ['andrea.ziccardi@dedgroup.com'];
+
+        let stats = {
+            users: 0,
+            messages: 0,
+            reactions: 0
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            const content = document.getElementById('content');
+            
+            if (!user) {
+                content.innerHTML = `
+                    <div class="backend-container">
+                        <div class="access-denied">
+                            <h2>🔒 Accesso Negato</h2>
+                            <p>Devi essere autenticato per accedere al backend.</p>
+                            <p style="margin-top: 1rem;"><a href="index.html" style="color: #8B5CF6;">Torna alla pagina principale</a></p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (!ADMIN_EMAILS.includes(user.email)) {
+                content.innerHTML = `
+                    <div class="backend-container">
+                        <button class="logout-btn" onclick="auth.signOut().then(() => location.reload())">Logout</button>
+                        <div class="access-denied">
+                            <h2>⛔ Accesso Negato</h2>
+                            <p>Non hai i permessi per accedere al backend.</p>
+                            <p style="margin-top: 0.5rem; color: var(--text-secondary);">Email: ${user.email}</p>
+                            <p style="margin-top: 1rem;"><a href="index.html" style="color: #8B5CF6;">Torna alla pagina principale</a></p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            renderBackend(user);
+            setupStatsListeners();
+        });
+
+        function renderBackend(user) {
+            const baseUrl = window.location.origin + window.location.pathname.replace('backend.html', '');
+            
+            document.getElementById('content').innerHTML = `
+                <div class="backend-container">
+                    <button class="logout-btn" onclick="signOut(auth).then(() => location.reload())">Logout</button>
+                    
+                    <div class="backend-header">
+                        <h1>⚡ Event Backend</h1>
+                        <p class="subtitle">Control Panel - Bending Spoons Internal Event</p>
+                        <div class="admin-info">
+                            👤 Admin: ${user.email}
+                        </div>
+                    </div>
+
+                    <div class="backend-section">
+                        <h2 class="section-title">Quick Actions</h2>
+                        <div class="actions-grid">
+                            <button class="action-btn" onclick="window.location.href='index.html'; setTimeout(() => { const event = new KeyboardEvent('keydown', { key: 'T', shiftKey: true }); document.dispatchEvent(event); }, 500);">
+                                <div class="icon">🧪</div>
+                                <div class="title">Test Reaction</div>
+                                <div class="description">Invia una reaction di test per verificare il sistema</div>
+                                <div class="shortcut">Shortcut: Shift + T</div>
+                            </button>
+
+                            <button class="action-btn" onclick="window.location.href='index.html'; setTimeout(() => { const event = new KeyboardEvent('keydown', { key: 'A', shiftKey: true }); document.dispatchEvent(event); }, 500);">
+                                <div class="icon">😊</div>
+                                <div class="title">Admin Reactions</div>
+                                <div class="description">Configura slot reactions e carica emoji custom</div>
+                                <div class="shortcut">Shortcut: Shift + A</div>
+                            </button>
+
+                            <button class="action-btn" onclick="window.location.href='index.html'; setTimeout(() => { const event = new KeyboardEvent('keydown', { key: 'P', shiftKey: true }); document.dispatchEvent(event); }, 500);">
+                                <div class="icon">📊</div>
+                                <div class="title">Create Poll</div>
+                                <div class="description">Crea un nuovo sondaggio per gli utenti</div>
+                                <div class="shortcut">Shortcut: Shift + P</div>
+                            </button>
+
+                            <button class="action-btn" onclick="window.location.href='index.html'">
+                                <div class="icon">🏠</div>
+                                <div class="title">Main Event Page</div>
+                                <div class="description">Torna alla pagina principale dell'evento</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="backend-section">
+                        <h2 class="section-title">OBS Overlays</h2>
+                        <div class="overlay-links">
+                            <div class="overlay-card">
+                                <div class="card-title">💬 Chat Overlay</div>
+                                <div class="card-description">Mostra i messaggi della chat in tempo reale. Dimensioni consigliate: 400x600px</div>
+                                <input type="text" class="link-input" readonly value="${baseUrl}index.html#chat" id="chat-link">
+                                <div class="btn-group">
+                                    <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('chat-link').value); alert('Link copiato!')">📋 Copy Link</button>
+                                    <button class="btn" onclick="window.open(document.getElementById('chat-link').value, '_blank')">🔗 Open</button>
+                                </div>
+                            </div>
+
+                            <div class="overlay-card">
+                                <div class="card-title">🎉 Reactions Overlay</div>
+                                <div class="card-description">Animazioni delle reactions in tempo reale. Dimensioni consigliate: 1920x1080px</div>
+                                <input type="text" class="link-input" readonly value="${baseUrl}reactions-overlay.html" id="reactions-link">
+                                <div class="btn-group">
+                                    <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('reactions-link').value); alert('Link copiato!')">📋 Copy Link</button>
+                                    <button class="btn" onclick="window.open(document.getElementById('reactions-link').value, '_blank')">🔗 Open</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="backend-section">
+                        <h2 class="section-title">Live Statistics</h2>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="stat-users">-</div>
+                                <div class="stat-label">👥 Utenti Online</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="stat-messages">-</div>
+                                <div class="stat-label">💬 Messaggi Totali</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="stat-reactions">-</div>
+                                <div class="stat-label">❤️ Reactions Totali</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="stat-emojis">-</div>
+                                <div class="stat-label">😊 Custom Emojis</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setupStatsListeners() {
+            // Count online users
+            const presenceRef = ref(database, 'presence');
+            onValue(presenceRef, (snapshot) => {
+                let count = 0;
+                snapshot.forEach(() => count++);
+                document.getElementById('stat-users').textContent = count;
+            });
+
+            // Count messages
+            const messagesRef = ref(database, 'messages');
+            onValue(messagesRef, (snapshot) => {
+                let count = 0;
+                snapshot.forEach(() => count++);
+                document.getElementById('stat-messages').textContent = count;
+            });
+
+            // Count reactions
+            const reactionsRef = ref(database, 'reactions');
+            onValue(reactionsRef, (snapshot) => {
+                let count = 0;
+                snapshot.forEach(() => count++);
+                document.getElementById('stat-reactions').textContent = count;
+            });
+
+            // Count custom emojis
+            const emojisRef = ref(database, 'customEmojis');
+            onValue(emojisRef, (snapshot) => {
+                let count = 0;
+                snapshot.forEach(() => count++);
+                document.getElementById('stat-emojis').textContent = count;
+            });
+        }
+
+        // Make signOut available globally
+        window.auth = auth;
+        window.signOut = signOut;
+    </script>
+</body>
+</html>
