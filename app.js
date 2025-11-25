@@ -153,6 +153,12 @@ async function signInWithGoogle() {
         console.log('Login successful:', result.user.displayName);
     } catch (error) {
         console.error('Login error:', error);
+        
+        // Ignore popup cancelled errors (user closed popup or multiple attempts)
+        if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
+            return;
+        }
+        
         alert('Errore durante il login: ' + error.message);
     }
 }
