@@ -655,6 +655,13 @@ function showPhotoMenu() {
         return;
     }
     
+    // Remove existing menu if present
+    const existingMenu = document.querySelector('.photo-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+        return;
+    }
+    
     const menu = document.createElement('div');
     menu.className = 'photo-menu';
     menu.innerHTML = `
