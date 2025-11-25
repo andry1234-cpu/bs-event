@@ -1003,8 +1003,8 @@ function createFloatingReaction(emoji) {
     const reaction = document.createElement('div');
     reaction.className = 'floating-reaction';
     
-    // Check if it's a custom emoji (URL)
-    if (emoji.startsWith('http')) {
+    // Check if it's a custom emoji (URL or base64)
+    if (emoji.startsWith('http') || emoji.startsWith('data:image')) {
         const img = document.createElement('img');
         img.src = emoji;
         img.className = 'custom-emoji-float';
