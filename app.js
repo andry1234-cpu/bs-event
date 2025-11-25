@@ -54,7 +54,7 @@ function init() {
     
     setupEventListeners();
     setupAuth();
-    initializeMillicast();
+    // Note: initializeMillicast() is now called after authentication
     
     // Hide loader and show content after layout is fully stable
     // Wait longer to ensure WebRTC negotiation is complete
@@ -100,11 +100,24 @@ function setupAuth() {
             
             // Initialize Firebase features
             initializeFirebase();
+            
+            // Initialize Millicast stream after authentication
+            initializeMillicast();
         } else {
             // User is signed out - show welcome screen
             isAuthenticated = false;
             currentUser = null;
             currentUserId = null;
+            
+            // Disconnect Millicast stream
+            if (millicastView) {
+                try {
+                    millicastView.stop();
+                    millicastView = null;
+                } catch (error) {
+                    console.log('Stream already disconnected');
+                }
+            }
             
             // Show welcome screen
             if (welcomeScreen) {
