@@ -1054,9 +1054,9 @@ function setUsername(name) {
 document.addEventListener('DOMContentLoaded', () => {
     init();
     
-    // Dev testing: Press 'T' to toggle test panel
+    // Dev testing: Press 'Shift+T' to toggle test panel
     document.addEventListener('keydown', (e) => {
-        if (e.key === 't' || e.key === 'T') {
+        if (e.shiftKey && (e.key === 't' || e.key === 'T')) {
             toggleTestPanel();
         }
         // Admin panel: Press 'Shift+A' to toggle admin panel
