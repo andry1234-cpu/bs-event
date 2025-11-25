@@ -1041,7 +1041,8 @@ html {
 }
 
 /* Admin Panel */
-#admin-panel {
+#admin-panel,
+#poll-panel {
     position: fixed;
     top: 0;
     left: 0;
