@@ -586,8 +586,53 @@ function createMessageElement(message) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
     
+    // Check if this is a poll
+    if (message.type === 'poll') {
+        contentDiv.className = 'poll-message';
+        
+        const pollQuestion = document.createElement('div');
+        pollQuestion.className = 'poll-question';
+        pollQuestion.textContent = message.question;
+        contentDiv.appendChild(pollQuestion);
+        
+        const pollOptions = document.createElement('div');
+        pollOptions.className = 'poll-options';
+        
+        const totalVotes = message.options.reduce((sum, opt) => sum + (opt.votes || 0), 0);
+        const hasVoted = message.voters && message.voters[currentUserId];
+        
+        message.options.forEach((option, index) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'poll-option';
+            if (hasVoted) optionDiv.classList.add('voted');
+            
+            const percentage = totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0;
+            
+            optionDiv.innerHTML = `
+                <div class="poll-option-bar" style="width: ${percentage}%"></div>
+                <div class="poll-option-content">
+                    <span class="poll-option-text">${option.text}</span>
+                    <span class="poll-option-votes">${option.votes || 0} voti (${percentage}%)</span>
+                </div>
+            `;
+            
+            if (!hasVoted && isAuthenticated) {
+                optionDiv.style.cursor = 'pointer';
+                optionDiv.addEventListener('click', () => votePoll(message, index));
+            }
+            
+            pollOptions.appendChild(optionDiv);
+        });
+        
+        contentDiv.appendChild(pollOptions);
+        
+        const pollFooter = document.createElement('div');
+        pollFooter.className = 'poll-footer';
+        pollFooter.textContent = `${totalVotes} ${totalVotes === 1 ? 'voto' : 'voti'} totali`;
+        contentDiv.appendChild(pollFooter);
+    }
     // Check if message has a photo
-    if (message.photoURL) {
+    else if (message.photoURL) {
         const photoContainer = document.createElement('div');
         photoContainer.className = 'message-photo-container';
         
@@ -1063,6 +1108,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.shiftKey && (e.key === 'a' || e.key === 'A')) {
             toggleAdminPanel();
         }
+        // Poll panel: Press 'Shift+P' to toggle poll panel
+        if (e.shiftKey && (e.key === 'p' || e.key === 'P')) {
+            togglePollPanel();
+        }
     });
 });
 
@@ -1385,6 +1434,175 @@ function triggerCustomReaction(imageUrl) {
         isCustom: true,
         userId: currentUserId,
         timestamp: Date.now()
+    });
+}
+
+// Poll System
+async function votePoll(pollMessage, optionIndex) {
+    if (!isAuthenticated) {
+        alert('Devi effettuare il login per votare');
+        return;
+    }
+    
+    try {
+        // Find the poll message in Firebase
+        const messagesRef = ref(database, 'messages');
+        const snapshot = await new Promise((resolve) => {
+            onValue(messagesRef, resolve, { onlyOnce: true });
+        });
+        
+        let pollKey = null;
+        snapshot.forEach((childSnapshot) => {
+            const msg = childSnapshot.val();
+            if (msg.type === 'poll' && msg.timestamp === pollMessage.timestamp && msg.question === pollMessage.question) {
+                pollKey = childSnapshot.key;
+            }
+        });
+        
+        if (!pollKey) {
+            alert('Sondaggio non trovato');
+            return;
+        }
+        
+        const pollRef = ref(database, `messages/${pollKey}`);
+        const pollSnapshot = await new Promise((resolve) => {
+            onValue(pollRef, resolve, { onlyOnce: true });
+        });
+        
+        const currentPoll = pollSnapshot.val();
+        
+        // Check if user already voted
+        if (currentPoll.voters && currentPoll.voters[currentUserId]) {
+            alert('Hai già votato in questo sondaggio');
+            return;
+        }
+        
+        // Update votes
+        const updatedOptions = [...currentPoll.options];
+        updatedOptions[optionIndex].votes = (updatedOptions[optionIndex].votes || 0) + 1;
+        
+        const updatedVoters = { ...(currentPoll.voters || {}), [currentUserId]: optionIndex };
+        
+        await set(pollRef, {
+            ...currentPoll,
+            options: updatedOptions,
+            voters: updatedVoters
+        });
+        
+    } catch (error) {
+        console.error('Error voting:', error);
+        alert('Errore durante la votazione');
+    }
+}
+
+function togglePollPanel() {
+    let panel = document.getElementById('poll-panel');
+    
+    if (panel) {
+        panel.remove();
+        return;
+    }
+    
+    if (!isAuthenticated) {
+        alert('Devi effettuare il login per creare sondaggi');
+        return;
+    }
+    
+    panel = document.createElement('div');
+    panel.id = 'poll-panel';
+    panel.innerHTML = `
+        <div class="admin-modal">
+            <div class="admin-header">
+                <h3>📊 Crea Sondaggio</h3>
+                <button id="close-poll" class="close-btn">✕</button>
+            </div>
+            
+            <div class="admin-content">
+                <div class="admin-section">
+                    <h4>Domanda</h4>
+                    <input type="text" id="poll-question" placeholder="Inserisci la domanda..." maxlength="200" style="width: 100%; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 1rem;">
+                </div>
+                
+                <div class="admin-section">
+                    <h4>Opzioni di risposta</h4>
+                    <p class="admin-hint">Minimo 2, massimo 5 opzioni</p>
+                    <div id="poll-options-container">
+                        <input type="text" class="poll-option-input" placeholder="Opzione 1" maxlength="100">
+                        <input type="text" class="poll-option-input" placeholder="Opzione 2" maxlength="100">
+                    </div>
+                    <button id="add-poll-option" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; color: var(--text-primary); cursor: pointer; font-size: 0.9rem;">+ Aggiungi opzione</button>
+                </div>
+                
+                <div class="admin-section">
+                    <button id="create-poll-btn" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; font-size: 1rem; transition: all 0.2s;">Pubblica Sondaggio</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(panel);
+    
+    // Close button
+    panel.querySelector('#close-poll').addEventListener('click', () => {
+        panel.remove();
+    });
+    
+    // Add option button
+    panel.querySelector('#add-poll-option').addEventListener('click', () => {
+        const container = panel.querySelector('#poll-options-container');
+        const optionCount = container.querySelectorAll('.poll-option-input').length;
+        
+        if (optionCount >= 5) {
+            alert('Massimo 5 opzioni consentite');
+            return;
+        }
+        
+        const newOption = document.createElement('input');
+        newOption.type = 'text';
+        newOption.className = 'poll-option-input';
+        newOption.placeholder = `Opzione ${optionCount + 1}`;
+        newOption.maxLength = 100;
+        container.appendChild(newOption);
+    });
+    
+    // Create poll button
+    panel.querySelector('#create-poll-btn').addEventListener('click', async () => {
+        const question = panel.querySelector('#poll-question').value.trim();
+        const optionInputs = panel.querySelectorAll('.poll-option-input');
+        const options = Array.from(optionInputs)
+            .map(input => input.value.trim())
+            .filter(opt => opt.length > 0);
+        
+        if (!question) {
+            alert('Inserisci una domanda');
+            return;
+        }
+        
+        if (options.length < 2) {
+            alert('Inserisci almeno 2 opzioni');
+            return;
+        }
+        
+        try {
+            const poll = {
+                question: question,
+                options: options.map(opt => ({ text: opt, votes: 0 })),
+                createdBy: currentUser,
+                userId: currentUserId,
+                timestamp: Date.now(),
+                voters: {},
+                type: 'poll'
+            };
+            
+            const messagesRef = ref(database, 'messages');
+            await push(messagesRef, poll);
+            
+            panel.remove();
+            addSystemMessage('Sondaggio pubblicato!');
+        } catch (error) {
+            console.error('Error creating poll:', error);
+            alert('Errore durante la creazione del sondaggio');
+        }
     });
 }
 
