@@ -1451,6 +1451,8 @@ function triggerCustomReaction(imageUrl) {
 
 // Poll System
 async function votePoll(pollMessage, optionIndex) {
+    console.log('votePoll called. currentUserId:', currentUserId, 'isAuthenticated:', isAuthenticated);
+    
     if (!isAuthenticated) {
         alert('Devi effettuare il login per votare');
         return;
@@ -1483,8 +1485,11 @@ async function votePoll(pollMessage, optionIndex) {
         
         const currentPoll = pollSnapshot.val();
         
+        console.log('Current poll voters:', currentPoll.voters);
+        console.log('Checking if user voted:', currentPoll.voters && currentPoll.voters[currentUserId]);
+        
         // Check if user already voted
-        if (currentPoll.voters && currentPoll.voters[currentUserId]) {
+        if (currentPoll.voters && currentPoll.voters[currentUserId] !== undefined) {
             alert('Hai già votato in questo sondaggio');
             return;
         }
