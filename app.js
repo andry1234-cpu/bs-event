@@ -754,33 +754,20 @@ async function processAndUploadImage(fileOrBlob) {
         chatMessages.appendChild(uploadingMsg);
         chatMessages.scrollTop = chatMessages.scrollHeight;
         
-        // Compress image
-        const compressedBlob = await compressImage(fileOrBlob);
-        
-        // Upload to Firebase Storage
         const timestamp = Date.now();
-        const fileName = `chat-photos/${currentUserId}_${timestamp}.jpg`;
-        const photoRef = storageRef(storage, fileName);
         
-        await uploadBytes(photoRef, compressedBlob);
-        const photoURL = await getDownloadURL(photoRef);
+        // Compress image and convert to base64
+        const compressedBase64 = await compressImageToBase64(fileOrBlob, 800, 0.85);
+        const thumbnailBase64 = await compressImageToBase64(fileOrBlob, 200, 0.8);
         
-        // Create thumbnail
-        const thumbnailBlob = await createThumbnail(fileOrBlob);
-        const thumbnailFileName = `chat-photos/thumbs/${currentUserId}_${timestamp}_thumb.jpg`;
-        const thumbnailRef = storageRef(storage, thumbnailFileName);
-        
-        await uploadBytes(thumbnailRef, thumbnailBlob);
-        const thumbnailURL = await getDownloadURL(thumbnailRef);
-        
-        // Send message with photo
+        // Send message with photo (base64 stored in database)
         const message = {
             author: currentUser,
             content: '[Foto]',
             timestamp: timestamp,
             userId: currentUserId,
-            photoURL: photoURL,
-            thumbnailURL: thumbnailURL,
+            photoURL: compressedBase64,
+            thumbnailURL: thumbnailBase64,
             reactions: {}
         };
         
@@ -792,7 +779,51 @@ async function processAndUploadImage(fileOrBlob) {
     } catch (error) {
         console.error('Error uploading photo:', error);
         alert('Errore durante il caricamento della foto');
+        const uploadingMsg = document.querySelector('.uploading-indicator');
+        if (uploadingMsg) uploadingMsg.remove();
     }
+}
+
+async function compressImageToBase64(fileOrBlob, maxSize, quality) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+            
+            // Resize if needed
+            if (width > maxSize || height > maxSize) {
+                if (width > height) {
+                    height = (height * maxSize) / width;
+                    width = maxSize;
+                } else {
+                    width = (width * maxSize) / height;
+                    height = maxSize;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convert to base64
+            const base64 = canvas.toDataURL('image/jpeg', quality);
+            resolve(base64);
+        };
+        
+        if (fileOrBlob instanceof Blob) {
+            img.src = URL.createObjectURL(fileOrBlob);
+        } else {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(fileOrBlob);
+        }
+    });
 }
 
 async function compressImage(fileOrBlob) {
