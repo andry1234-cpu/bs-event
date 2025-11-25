@@ -1106,15 +1106,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Dev testing: Press 'Shift+T' to toggle test panel
     document.addEventListener('keydown', (e) => {
+        // Don't trigger shortcuts if user is typing in input fields (except for these specific shortcuts)
+        const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+        
         if (e.shiftKey && (e.key === 't' || e.key === 'T')) {
+            e.preventDefault();
             toggleTestPanel();
         }
         // Admin panel: Press 'Shift+A' to toggle admin panel
         if (e.shiftKey && (e.key === 'a' || e.key === 'A')) {
+            e.preventDefault();
             toggleAdminPanel();
         }
         // Poll panel: Press 'Shift+P' to toggle poll panel
         if (e.shiftKey && (e.key === 'p' || e.key === 'P')) {
+            e.preventDefault();
             togglePollPanel();
         }
     });
