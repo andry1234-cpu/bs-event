@@ -1120,6 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Poll panel: Press 'Shift+P' to toggle poll panel
         if (e.shiftKey && (e.key === 'p' || e.key === 'P')) {
+            console.log('Shift+P detected, opening poll panel');
             e.preventDefault();
             togglePollPanel();
         }
