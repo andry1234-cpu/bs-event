@@ -38,6 +38,7 @@ let isAuthenticated = false;
 let userColors = {}; // Store user colors
 let customEmojis = []; // Store custom emoji URLs
 let reactionSlots = ['❤️', '👏', '🔥', '😂', '👍']; // Default emoji slots (configurable)
+let reactionCounter = 0; // Counter to ensure unique IDs even with same timestamp
 
 // DOM Elements (will be initialized after DOM is ready)
 let chatMessages, chatInput, sendBtn, reactionsOverlay, reactionButtons, usernameDisplay, onlineUsersDisplay, videoIframe;
@@ -1108,7 +1109,7 @@ function triggerReaction(emoji) {
         emoji: emoji,
         userId: currentUserId,
         timestamp: Date.now(),
-        randomId: Math.random().toString(36).substring(7) // Prevent duplicate detection
+        sequence: reactionCounter++ // Ensure uniqueness
     });
 }
 
@@ -1695,7 +1696,7 @@ function triggerCustomReaction(imageUrl) {
         isCustom: true,
         userId: currentUserId,
         timestamp: Date.now(),
-        randomId: Math.random().toString(36).substring(7) // Prevent duplicate detection
+        sequence: reactionCounter++ // Ensure uniqueness
     });
 }
 

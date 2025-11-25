@@ -258,10 +258,11 @@
         }
 
         function handleReaction(reactionData) {
-            const { emoji, timestamp, randomId } = reactionData;
+            const { emoji, timestamp, randomId, sequence } = reactionData;
             
-            // Crea l'ID unico per questa reaction (include randomId se presente)
-            const reactionId = randomId ? `${emoji}-${timestamp}-${randomId}` : `${emoji}-${timestamp}`;
+            // Crea l'ID unico per questa reaction (usa sequence se presente, altrimenti randomId, altrimenti solo timestamp)
+            const uniqueId = sequence !== undefined ? sequence : (randomId || timestamp);
+            const reactionId = `${emoji}-${timestamp}-${uniqueId}`;
             
             // Se abbiamo già processato questa reaction, ignora
             if (processedReactions.has(reactionId)) {
