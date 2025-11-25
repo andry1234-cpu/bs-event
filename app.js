@@ -299,8 +299,8 @@ async function initializeMillicast() {
     });
     
     try {
-        // Create viewer
-        millicastView = new window.millicast.View(streamName, tokenGenerator);
+        // Create viewer (streamName is now only in tokenGenerator)
+        millicastView = new window.millicast.View(undefined, tokenGenerator);
         
         // Set video element
         millicastView.on('track', (event) => {
