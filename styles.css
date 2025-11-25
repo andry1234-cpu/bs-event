@@ -1401,6 +1401,12 @@ html {
     display: block;
 }
 
+@media (max-width: 768px) {
+    .message-photo {
+        max-width: 200px;
+    }
+}
+
 .message-photo:hover {
     transform: scale(1.02);
 }
