@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Overlay - Bending Spoons Event</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #8B5CF6;
+            --secondary-color: #3B82F6;
+            --text-primary: #FFFFFF;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            background: transparent;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text-primary);
+        }
+
+        .chat-overlay-container {
+            width: 100%;
+            height: 100%;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-overlay-header {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.95) 0%, rgba(59, 130, 246, 0.95) 100%);
+            padding: 30px 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-overlay-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-messages-overlay {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            padding-right: 20px;
+        }
+
+        .message-overlay {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.75) 100%);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-left: 6px solid var(--primary-color);
+            animation: slideInRight 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message-overlay-header {
+            display: flex;
+            align-items: baseline;
+            gap: 20px;
+        }
+
+        .message-overlay-author {
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .message-overlay-time {
+            font-size: 24px;
+            color: var(--text-secondary);
+        }
+
+        .message-overlay-content {
+            font-size: 28px;
+            line-height: 1.5;
+            color: var(--text-primary);
+        }
+
+        .message-photo-overlay {
+            max-width: 600px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            margin-top: 10px;
+        }
+
+        .photo-caption-overlay {
+            font-size: 26px;
+            color: var(--text-secondary);
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .chat-messages-overlay::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages-overlay::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages-overlay::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 4px;
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            animation: fadeInOut 4s ease-in-out;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% {
+                opacity: 0;
+            }
+            10%, 90% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-indicator" id="status-indicator">
+        <span class="status-dot"></span>
+        <span>Chat Live</span>
+    </div>
+
+    <div class="chat-overlay-container">
+        <div class="chat-overlay-header">
+            <h1 class="chat-overlay-title">💬 Chat</h1>
+        </div>
+        
+        <div class="chat-messages-overlay" id="chat-messages-overlay">
+            <!-- Messages will appear here -->
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, query, orderByChild, limitToLast, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCmEbIjFLlLxVgLUqwsOLCsB0aoMWF6PJQ",
+            authDomain: "bendingspoons-eventdec25.firebaseapp.com",
+            databaseURL: "https://bendingspoons-eventdec25-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "bendingspoons-eventdec25",
+            storageBucket: "bendingspoons-eventdec25.firebasestorage.app",
+            messagingSenderId: "26050473198",
+            appId: "1:26050473198:web:52d2e5d2bb912eaa2ad7ff",
+            measurementId: "G-6C7XXL2XSN"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        
+        const chatMessagesOverlay = document.getElementById('chat-messages-overlay');
+        const statusIndicator = document.getElementById('status-indicator');
+        
+        let messagesInitialized = false;
+        let userColors = {};
+        const MAX_MESSAGES = 8; // Show last 8 messages on screen
+
+        // Bending Spoons gradient colors
+        const colors = [
+            '#8B5CF6', '#3B82F6', '#A78BFA', '#6366F1',
+            '#8B5CF6', '#7C3AED', '#6D28D9', '#5B21B6'
+        ];
+
+        function getUserColor(userId) {
+            if (userColors[userId]) {
+                return userColors[userId];
+            }
+            
+            let hash = 0;
+            for (let i = 0; i < userId.length; i++) {
+                hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash) % colors.length;
+            
+            userColors[userId] = colors[index];
+            return colors[index];
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        function createMessageElement(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message-overlay';
+            
+            const userColor = message.userId ? getUserColor(message.userId) : '#8B5CF6';
+            messageDiv.style.borderLeftColor = userColor;
+            
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'message-overlay-header';
+            
+            const authorSpan = document.createElement('span');
+            authorSpan.className = 'message-overlay-author';
+            authorSpan.textContent = message.author;
+            authorSpan.style.color = userColor;
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'message-overlay-time';
+            timeSpan.textContent = formatTime(message.timestamp);
+            
+            headerDiv.appendChild(authorSpan);
+            headerDiv.appendChild(timeSpan);
+            
+            messageDiv.appendChild(headerDiv);
+            
+            // Check if message has photo
+            if (message.photoURL) {
+                const img = document.createElement('img');
+                img.src = message.photoURL;
+                img.className = 'message-photo-overlay';
+                img.alt = 'Foto';
+                messageDiv.appendChild(img);
+                
+                if (message.content && message.content !== '[Foto]') {
+                    const caption = document.createElement('p');
+                    caption.className = 'photo-caption-overlay';
+                    caption.textContent = message.content;
+                    messageDiv.appendChild(caption);
+                }
+            } else {
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-overlay-content';
+                contentDiv.textContent = message.content;
+                messageDiv.appendChild(contentDiv);
+            }
+            
+            return messageDiv;
+        }
+
+        function addMessageToOverlay(message) {
+            const messageElement = createMessageElement(message);
+            chatMessagesOverlay.appendChild(messageElement);
+            
+            // Keep only last MAX_MESSAGES
+            const messages = chatMessagesOverlay.querySelectorAll('.message-overlay');
+            if (messages.length > MAX_MESSAGES) {
+                messages[0].remove();
+            }
+            
+            // Auto scroll to bottom
+            chatMessagesOverlay.scrollTop = chatMessagesOverlay.scrollHeight;
+        }
+
+        // Listen to messages
+        const messagesRef = ref(database, 'messages');
+        const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(MAX_MESSAGES));
+        
+        onChildAdded(messagesQuery, (snapshot) => {
+            const message = snapshot.val();
+            
+            // Skip initial load, only show new messages after initialization
+            if (!messagesInitialized) {
+                return;
+            }
+            
+            addMessageToOverlay(message);
+        });
+
+        // Mark as initialized after a short delay
+        setTimeout(() => {
+            messagesInitialized = true;
+            console.log('Chat overlay initialized - ready for new messages');
+        }, 2000);
+
+        // Hide status indicator after 4 seconds
+        setTimeout(() => {
+            statusIndicator.style.display = 'none';
+        }, 4000);
+    </script>
+</body>
+</html>
