@@ -676,7 +676,9 @@ function showPhotoMenu() {
         </button>
     `;
     
-    document.body.appendChild(menu);
+    // Append to chat section instead of body
+    const chatSection = document.querySelector('.chat-section');
+    chatSection.appendChild(menu);
     
     // File input for choosing photo
     const fileInput = document.createElement('input');
