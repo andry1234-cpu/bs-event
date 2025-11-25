@@ -1280,7 +1280,8 @@ html {
 .photo-menu {
     position: absolute;
     bottom: 60px;
-    left: 0;
+    left: 50%;
+    transform: translateX(-50%);
     background: var(--bg-primary);
     border: 1px solid rgba(139, 92, 246, 0.3);
     border-radius: 12px;
