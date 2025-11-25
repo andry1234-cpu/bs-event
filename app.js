@@ -1532,15 +1532,15 @@ function togglePollPanel() {
             <div class="admin-content">
                 <div class="admin-section">
                     <h4>Domanda</h4>
-                    <input type="text" id="poll-question" placeholder="Inserisci la domanda..." maxlength="200" style="width: 100%; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 1rem;">
+                    <input type="text" id="poll-question" name="poll-question" placeholder="Inserisci la domanda..." maxlength="200" style="width: 100%; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 1rem;">
                 </div>
                 
                 <div class="admin-section">
                     <h4>Opzioni di risposta</h4>
                     <p class="admin-hint">Minimo 2, massimo 5 opzioni</p>
                     <div id="poll-options-container">
-                        <input type="text" class="poll-option-input" placeholder="Opzione 1" maxlength="100">
-                        <input type="text" class="poll-option-input" placeholder="Opzione 2" maxlength="100">
+                        <input type="text" class="poll-option-input" name="poll-option-1" placeholder="Opzione 1" maxlength="100">
+                        <input type="text" class="poll-option-input" name="poll-option-2" placeholder="Opzione 2" maxlength="100">
                     </div>
                     <button id="add-poll-option" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; color: var(--text-primary); cursor: pointer; font-size: 0.9rem;">+ Aggiungi opzione</button>
                 </div>
@@ -1572,6 +1572,7 @@ function togglePollPanel() {
         const newOption = document.createElement('input');
         newOption.type = 'text';
         newOption.className = 'poll-option-input';
+        newOption.name = `poll-option-${optionCount + 1}`;
         newOption.placeholder = `Opzione ${optionCount + 1}`;
         newOption.maxLength = 100;
         container.appendChild(newOption);
