@@ -694,6 +694,11 @@ function formatTime(timestamp) {
 }
 
 // Photo Upload Functions
+function closePhotoMenu(menu) {
+    menu.classList.add('closing');
+    setTimeout(() => menu.remove(), 300);
+}
+
 function showPhotoMenu() {
     if (!isAuthenticated) {
         alert('Devi effettuare il login per inviare foto');
@@ -703,7 +708,7 @@ function showPhotoMenu() {
     // Remove existing menu if present
     const existingMenu = document.querySelector('.photo-menu');
     if (existingMenu) {
-        existingMenu.remove();
+        closePhotoMenu(existingMenu);
         return;
     }
     
@@ -734,16 +739,16 @@ function showPhotoMenu() {
     
     menu.querySelector('#choose-photo-btn').addEventListener('click', () => {
         fileInput.click();
-        menu.remove();
+        closePhotoMenu(menu);
     });
     
     menu.querySelector('#capture-photo-btn').addEventListener('click', () => {
-        menu.remove();
+        closePhotoMenu(menu);
         openCameraCapture();
     });
     
     menu.querySelector('#cancel-photo-btn').addEventListener('click', () => {
-        menu.remove();
+        closePhotoMenu(menu);
     });
     
     fileInput.addEventListener('change', async (e) => {
