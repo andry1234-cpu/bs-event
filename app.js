@@ -194,6 +194,12 @@ function setupEventListeners() {
             sendMessage();
         }
     });
+    
+    // Photo button
+    const photoBtn = document.getElementById('photo-btn');
+    if (photoBtn) {
+        photoBtn.addEventListener('click', showPhotoMenu);
+    }
 
     // Reactions
     reactionButtons.forEach(btn => {
@@ -570,7 +576,35 @@ function createMessageElement(message) {
     
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
-    contentDiv.textContent = message.content;
+    
+    // Check if message has a photo
+    if (message.photoURL) {
+        const photoContainer = document.createElement('div');
+        photoContainer.className = 'message-photo-container';
+        
+        const img = document.createElement('img');
+        img.src = message.thumbnailURL || message.photoURL;
+        img.className = 'message-photo';
+        img.alt = 'Foto';
+        img.loading = 'lazy';
+        
+        img.addEventListener('click', () => {
+            openLightbox(message.photoURL);
+        });
+        
+        photoContainer.appendChild(img);
+        contentDiv.appendChild(photoContainer);
+        
+        // Add caption if there's text beyond [Foto]
+        if (message.content && message.content !== '[Foto]') {
+            const caption = document.createElement('p');
+            caption.className = 'photo-caption';
+            caption.textContent = message.content;
+            contentDiv.appendChild(caption);
+        }
+    } else {
+        contentDiv.textContent = message.content;
+    }
     
     // Apply user color to message border and background gradient
     if (message.userId) {
@@ -603,6 +637,267 @@ function formatTime(timestamp) {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
+}
+
+// Photo Upload Functions
+function showPhotoMenu() {
+    if (!isAuthenticated) {
+        alert('Devi effettuare il login per inviare foto');
+        return;
+    }
+    
+    const menu = document.createElement('div');
+    menu.className = 'photo-menu';
+    menu.innerHTML = `
+        <button class="photo-menu-btn" id="choose-photo-btn">
+            📁 Scegli foto
+        </button>
+        <button class="photo-menu-btn" id="capture-photo-btn">
+            📷 Scatta foto
+        </button>
+        <button class="photo-menu-btn cancel" id="cancel-photo-btn">
+            ✕ Annulla
+        </button>
+    `;
+    
+    document.body.appendChild(menu);
+    
+    // File input for choosing photo
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    
+    menu.querySelector('#choose-photo-btn').addEventListener('click', () => {
+        fileInput.click();
+        menu.remove();
+    });
+    
+    menu.querySelector('#capture-photo-btn').addEventListener('click', () => {
+        menu.remove();
+        openCameraCapture();
+    });
+    
+    menu.querySelector('#cancel-photo-btn').addEventListener('click', () => {
+        menu.remove();
+    });
+    
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            await processAndUploadImage(file);
+        }
+        fileInput.remove();
+    });
+}
+
+async function openCameraCapture() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'user' },
+            audio: false 
+        });
+        
+        const modal = document.createElement('div');
+        modal.className = 'camera-modal';
+        modal.innerHTML = `
+            <div class="camera-container">
+                <video id="camera-preview" autoplay playsinline></video>
+                <canvas id="camera-canvas" style="display: none;"></canvas>
+                <div class="camera-controls">
+                    <button class="camera-btn cancel" id="cancel-camera">Annulla</button>
+                    <button class="camera-btn capture" id="capture-btn">📷 Scatta</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const video = modal.querySelector('#camera-preview');
+        const canvas = modal.querySelector('#camera-canvas');
+        video.srcObject = stream;
+        
+        modal.querySelector('#cancel-camera').addEventListener('click', () => {
+            stream.getTracks().forEach(track => track.stop());
+            modal.remove();
+        });
+        
+        modal.querySelector('#capture-btn').addEventListener('click', async () => {
+            // Capture image from video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            // Stop camera
+            stream.getTracks().forEach(track => track.stop());
+            
+            // Convert to blob
+            canvas.toBlob(async (blob) => {
+                modal.remove();
+                await processAndUploadImage(blob);
+            }, 'image/jpeg', 0.9);
+        });
+        
+    } catch (error) {
+        console.error('Camera error:', error);
+        alert('Impossibile accedere alla camera. Verifica i permessi.');
+    }
+}
+
+async function processAndUploadImage(fileOrBlob) {
+    try {
+        // Show uploading indicator
+        const uploadingMsg = document.createElement('div');
+        uploadingMsg.className = 'uploading-indicator';
+        uploadingMsg.textContent = 'Caricamento foto... ⏳';
+        chatMessages.appendChild(uploadingMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Compress image
+        const compressedBlob = await compressImage(fileOrBlob);
+        
+        // Upload to Firebase Storage
+        const timestamp = Date.now();
+        const fileName = `chat-photos/${currentUserId}_${timestamp}.jpg`;
+        const photoRef = storageRef(storage, fileName);
+        
+        await uploadBytes(photoRef, compressedBlob);
+        const photoURL = await getDownloadURL(photoRef);
+        
+        // Create thumbnail
+        const thumbnailBlob = await createThumbnail(fileOrBlob);
+        const thumbnailFileName = `chat-photos/thumbs/${currentUserId}_${timestamp}_thumb.jpg`;
+        const thumbnailRef = storageRef(storage, thumbnailFileName);
+        
+        await uploadBytes(thumbnailRef, thumbnailBlob);
+        const thumbnailURL = await getDownloadURL(thumbnailRef);
+        
+        // Send message with photo
+        const message = {
+            author: currentUser,
+            content: '[Foto]',
+            timestamp: timestamp,
+            userId: currentUserId,
+            photoURL: photoURL,
+            thumbnailURL: thumbnailURL,
+            reactions: {}
+        };
+        
+        const messagesRef = ref(database, 'messages');
+        await push(messagesRef, message);
+        
+        uploadingMsg.remove();
+        
+    } catch (error) {
+        console.error('Error uploading photo:', error);
+        alert('Errore durante il caricamento della foto');
+    }
+}
+
+async function compressImage(fileOrBlob) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        img.onload = () => {
+            // Max width 800px
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > 800) {
+                height = (height * 800) / width;
+                width = 800;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+                resolve(blob);
+            }, 'image/jpeg', 0.85);
+        };
+        
+        if (fileOrBlob instanceof Blob) {
+            img.src = URL.createObjectURL(fileOrBlob);
+        } else {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(fileOrBlob);
+        }
+    });
+}
+
+async function createThumbnail(fileOrBlob) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        img.onload = () => {
+            // 200x200 thumbnail
+            const size = 200;
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Calculate crop to maintain aspect ratio
+            const aspectRatio = img.width / img.height;
+            let sourceWidth, sourceHeight, sourceX, sourceY;
+            
+            if (aspectRatio > 1) {
+                sourceHeight = img.height;
+                sourceWidth = img.height;
+                sourceX = (img.width - sourceWidth) / 2;
+                sourceY = 0;
+            } else {
+                sourceWidth = img.width;
+                sourceHeight = img.width;
+                sourceX = 0;
+                sourceY = (img.height - sourceHeight) / 2;
+            }
+            
+            ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, size, size);
+            
+            canvas.toBlob((blob) => {
+                resolve(blob);
+            }, 'image/jpeg', 0.8);
+        };
+        
+        if (fileOrBlob instanceof Blob) {
+            img.src = URL.createObjectURL(fileOrBlob);
+        } else {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(fileOrBlob);
+        }
+    });
+}
+
+function openLightbox(imageUrl) {
+    const lightbox = document.createElement('div');
+    lightbox.className = 'lightbox';
+    lightbox.innerHTML = `
+        <div class="lightbox-content">
+            <button class="lightbox-close">✕</button>
+            <img src="${imageUrl}" alt="Foto">
+        </div>
+    `;
+    
+    document.body.appendChild(lightbox);
+    
+    const closeBtn = lightbox.querySelector('.lightbox-close');
+    const closeLightbox = () => lightbox.remove();
+    
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) closeLightbox();
+    });
 }
 
 // Generate consistent color for user
