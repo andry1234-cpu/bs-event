@@ -323,24 +323,30 @@
         onChildAdded(messagesQuery, (snapshot) => {
             const message = snapshot.val();
             
-            // Skip initial load, only show new messages after initialization
+            // Show initial messages on load, then show new messages as they arrive
             if (!messagesInitialized) {
-                return;
+                // Loading initial messages
+                setTimeout(() => {
+                    addMessageToOverlay(message);
+                }, 100);
+            } else {
+                // New message arrived after initialization
+                addMessageToOverlay(message);
             }
-            
-            addMessageToOverlay(message);
         });
 
-        // Mark as initialized after a short delay
+        // Mark as initialized after initial load
         setTimeout(() => {
             messagesInitialized = true;
             console.log('Chat overlay initialized - ready for new messages');
-        }, 2000);
+        }, 1000);
 
-        // Hide status indicator after 4 seconds
+        // Hide status indicator after 3 seconds
         setTimeout(() => {
-            statusIndicator.style.display = 'none';
-        }, 4000);
+            if (statusIndicator) {
+                statusIndicator.style.display = 'none';
+            }
+        }, 3000);
     </script>
 </body>
 </html>
