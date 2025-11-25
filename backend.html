@@ -27,18 +27,20 @@
             border: 1px solid rgba(139, 92, 246, 0.3);
             border-radius: 16px;
             padding: 1.25rem;
+            padding-top: 3rem;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
 
         .backend-header {
             text-align: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
             border-bottom: 1px solid rgba(139, 92, 246, 0.2);
         }
 
         .backend-header h1 {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -48,22 +50,22 @@
 
         .backend-header .subtitle {
             color: var(--text-secondary);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         .backend-header .admin-info {
-            margin-top: 0.5rem;
-            padding: 0.5rem 1rem;
+            margin-top: 0.4rem;
+            padding: 0.4rem 0.8rem;
             background: rgba(139, 92, 246, 0.1);
             border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 8px;
+            border-radius: 6px;
             display: inline-block;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
         }
 
         .backend-section {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .backend-section:last-child {
@@ -71,19 +73,19 @@
         }
 
         .section-title {
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: #8B5CF6;
-            margin: 0 0 1rem 0;
+            margin: 0 0 0.75rem 0;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
         .section-title::before {
             content: '';
             width: 3px;
-            height: 18px;
+            height: 16px;
             background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
             border-radius: 2px;
         }
@@ -98,16 +100,16 @@
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
             border: 1px solid rgba(139, 92, 246, 0.3);
             color: var(--text-primary);
-            padding: 1rem;
-            border-radius: 12px;
+            padding: 0.75rem;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: left;
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             flex-direction: column;
-            gap: 0.4rem;
+            gap: 0.3rem;
         }
 
         .action-btn:hover {
@@ -118,27 +120,27 @@
         }
 
         .action-btn .icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
+            font-size: 1.3rem;
+            margin-bottom: 0.2rem;
         }
 
         .action-btn .title {
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             color: var(--text-primary);
         }
 
         .action-btn .description {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-secondary);
-            line-height: 1.3;
+            line-height: 1.2;
         }
 
         .action-btn .shortcut {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #8B5CF6;
             font-weight: 500;
-            margin-top: 0.25rem;
+            margin-top: 0.2rem;
         }
 
         .overlay-links {
@@ -150,8 +152,8 @@
         .overlay-card {
             background: rgba(139, 92, 246, 0.05);
             border: 1px solid rgba(139, 92, 246, 0.2);
-            border-radius: 12px;
-            padding: 1rem;
+            border-radius: 10px;
+            padding: 0.75rem;
             transition: all 0.3s ease;
         }
 
@@ -161,29 +163,29 @@
         }
 
         .overlay-card .card-title {
-            font-size: 1.1rem;
+            font-size: 0.85rem;
             font-weight: 600;
             color: var(--text-primary);
-            margin: 0 0 0.5rem 0;
+            margin: 0 0 0.3rem 0;
         }
 
         .overlay-card .card-description {
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             color: var(--text-secondary);
-            margin-bottom: 1rem;
-            line-height: 1.4;
+            margin-bottom: 0.6rem;
+            line-height: 1.2;
         }
 
         .overlay-card .link-input {
             background: rgba(15, 15, 20, 0.8);
             border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 8px;
-            padding: 0.75rem;
+            border-radius: 6px;
+            padding: 0.5rem;
             color: var(--text-primary);
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             width: 100%;
             font-family: 'Courier New', monospace;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
         }
 
         .overlay-card .btn-group {
@@ -193,14 +195,14 @@
 
         .overlay-card .btn {
             flex: 1;
-            padding: 0.75rem;
-            border-radius: 8px;
+            padding: 0.5rem;
+            border-radius: 6px;
             border: 1px solid rgba(139, 92, 246, 0.3);
             background: rgba(139, 92, 246, 0.1);
             color: var(--text-primary);
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             font-weight: 500;
         }
 
@@ -211,29 +213,29 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
         }
 
         .stat-card {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
             border: 1px solid rgba(139, 92, 246, 0.2);
-            border-radius: 16px;
-            padding: 1.5rem;
+            border-radius: 10px;
+            padding: 0.75rem;
             text-align: center;
         }
 
         .stat-card .stat-value {
-            font-size: 2.5rem;
+            font-size: 1.5rem;
             font-weight: 700;
             background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.2rem;
         }
 
         .stat-card .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
             font-weight: 500;
         }
