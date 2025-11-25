@@ -3,5 +3,8 @@ node_modules/
 *.log
 .env
 
+# Functions
+functions/node_modules/
+
 # Admin tools - keep local only
 clear-database.html

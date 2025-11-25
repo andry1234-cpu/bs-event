@@ -288,18 +288,29 @@ async function initializeMillicast() {
         return;
     }
     
-    // Millicast stream configuration
-    // Free Nationals demo stream (from Dolby OptiView)
-    const streamAccountId = 'k9Mwad';
-    const streamName = 'multiview';
-    
-    const tokenGenerator = () => window.millicast.Director.getSubscriber({
-        streamAccountId: streamAccountId,
-        streamName: streamName
+    // Millicast stream configuration (obfuscated for basic security)
+    // Note: For production, use Cloud Functions after upgrading to Blaze plan
+    const _0x4a2b = ['k9Mwad', 'multiview'];
+    const getStreamConfig = () => ({
+        accountId: atob('azlNd2Fk'),
+        name: atob('bXVsdGl2aWV3')
     });
     
+    const tokenGenerator = () => {
+        // Require authentication to access stream
+        if (!isAuthenticated) {
+            throw new Error('Autenticazione richiesta per accedere allo stream');
+        }
+        
+        const config = getStreamConfig();
+        return window.millicast.Director.getSubscriber({
+            streamAccountId: config.accountId,
+            streamName: config.name
+        });
+    };
+    
     try {
-        // Create viewer (streamName is now only in tokenGenerator)
+        // Create viewer with token generator
         millicastView = new window.millicast.View(undefined, tokenGenerator);
         
         // Set video element
